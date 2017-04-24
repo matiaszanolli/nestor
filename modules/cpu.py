@@ -1,6 +1,8 @@
 import numpy as np
-from .memory import Memory
-from typing import Optional
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .memory import Memory
 
 
 class InstructionMode(object):
@@ -164,9 +166,9 @@ class CPU(object):
     interrupt = None  # interrupt type to perform
     stall = None  # number of cycles to stall
     table = []
-    memory = None  # type: Memory
+    memory = None  # type: 'Memory'
 
-    def __init__(self, memory: Memory):
+    def __init__(self, memory: 'Memory'):
         self.memory = memory
 
     def reset(self) -> None:

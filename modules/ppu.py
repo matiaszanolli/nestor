@@ -223,9 +223,10 @@ class PPU(object):
 
     def write_scroll(self, value: np.uint8) -> None:
         """
-        $2005 (Scroll): This register is used to change the scroll position, 
+        $2005 (PPUSCROLL): This register is used to change the scroll position, 
         that is, to tell the PPU which pixel of the nametable selected through 
         PPUCTRL should be at the top left corner of the rendered screen.
+        This function should always be called twice.
         :param value: byte
         """
         if self.w == 0:
@@ -236,6 +237,22 @@ class PPU(object):
             self.t = (self.t & 0x8FFF) | ((np.uint16(value) & 0x07) << 12)
             self.t = (self.t & 0xFC1F) | ((np.uint16(value) & 0xF8) << 2)
             self.w = 0
+
+    def write_address(self, value: np.uint8) -> None:
+        """
+        $2006 (PPUADDR): Designed for the CPU to write on VRAM through a pair 
+        of registers on the PPU. First it loads an address into PPUADDR, 
+        and then it writes repeatedly to PPUDATA to fill VRAM.
+        This function should always be called twice.
+        :param value: byte
+        """
+        if self.w == 0:
+            self.t = (self.t & 0x80FF) | ((np.uint16(value) & 0x3F) << 8)
+            self.w = 1
+        else:
+            self.t = (self.t & 0xFF00) | np.uint16(value)
+            self.v = self.t
+            self.w = 1
 
 
 

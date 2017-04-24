@@ -7,13 +7,13 @@ It's not a brand new emulator, but more of an attempt to understand how
 emulators work internally, in order to have a solid knowledge base before
 starting one from scratch.
 """
-import numpy as np
 import pyglet
-from .cpu import CPU
-from .apu import APU
-from .ppu import PPU
-from .memory import Memory
-from .cartridge import Cartridge
+
+from modules.cartridge import Cartridge
+from modules.apu import APU
+from modules.cpu import CPU
+from modules.memory import Memory
+from modules.ppu import PPU
 
 
 class Manager(object):
@@ -21,7 +21,7 @@ class Manager(object):
     instance = None  # type: Manager
     memory = Memory()
     counter = 0
-    ppu = PPU()
+    ppu = PPU(memory)
     cpu = CPU(memory)
     apu = APU()
     cartridge = Cartridge
@@ -40,7 +40,7 @@ class Manager(object):
 
     def on_draw(self):
         self.window.clear()
-        self.PPU.frame.draw()
+        self.ppu.frame.draw()
 
     def tick(self):
         self.counter += 1

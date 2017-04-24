@@ -1,6 +1,6 @@
 import numpy as np
 from typing import List
-from .main import Manager
+
 
 class Memory(object):
     def __init__(self):
@@ -96,16 +96,20 @@ class Memory(object):
 
 class PPUMemory(object):
 
-    console = Manager.get()
     MIRROR_HORIZONTAL = 0
     MIRROR_VERTICAL = 1
     MIRROR_SINGLE_0 = 2
     MIRROR_SINGLE_1 = 3
     MIRROR_FOUR = 4
 
+    def __init__(self):
+        from ..main import Manager
+        self.console = Manager.get()
+
     def read(self, address: np.uint16) -> np.uint8:
         address = address % 0x4000
         if address < 0x2000:
             return self.console.mapper.read(address)
         elif address < 0x3F00:
+            pass
         # TODO: finish

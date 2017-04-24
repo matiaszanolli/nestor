@@ -1,5 +1,11 @@
 """
-I have no freaking idea of what I am doing
+NEStor: an attempt to understand emulation by Matias Zanolli
+Heavily based on https://github.com/fogleman/nes
+Also took some elements from https://github.com/makononov/PyNES
+
+It's not a brand new emulator, but more of an attempt to understand how
+emulators work internally, in order to have a solid knowledge base before
+starting one from scratch.
 """
 import numpy as np
 import pyglet

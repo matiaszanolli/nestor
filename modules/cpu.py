@@ -152,9 +152,9 @@ class CPU(object):
     cycles = 0  # type: np.uint64
     pc = None  # program counter, stores the next instruction
     sp = None  # stack pointer
-    a = None  # accumulator
-    x = None  # X register
-    y = None  # Y register
+    a = 0  # accumulator
+    x = 0  # X register
+    y = 0  # Y register
     c = None  # carry flag
     z = None  # zero flag
     i = None  # interrupt disable flag
@@ -172,8 +172,9 @@ class CPU(object):
         self.memory = memory
 
     def reset(self) -> None:
-        self.pc = self.memory.read(0xFFFC)
+        self.pc = self.memory.read(np.uint8(0xFFFC))
         self.sp = 0xFD
+        self.set_flags(0x24)
 
     def run_instruction(self, inst, **kwargs):
         if inst not in self.instruction_names:
@@ -254,7 +255,9 @@ class CPU(object):
         opcode_name = self.instruction_names[opcode].lower()
 
         # Execute the operation
-        getattr(self, opcode_name)(info)
+        opcode = getattr(self, opcode_name, None)
+        if opcode:
+            opcode(info)
 
         return int(self.cycles - cycles)
 
@@ -521,7 +524,7 @@ class CPU(object):
         self.stack_push16(self.pc)
         self.php(info)
         self.sei(info)
-        self.pc = self.memory.read16(0xFFFE)
+        self.pc = self.memory.read16(np.uint8(0xFFFE))
 
     def bvc(self, info: StepInfo) -> None:
         """

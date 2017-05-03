@@ -11,7 +11,7 @@ class PPU(object):
     memory = None
     cycle = 0  # type: int
     scanline = 0  # type: int
-    frame = None  # type: Batch
+    frame = 0  # type: int
     frame_number = 0  # type: int
     palette = []  # type: List[tuple]
 
@@ -32,10 +32,10 @@ class PPU(object):
     register = None
 
     # Flags
-    nmi_occurred = None  # type: bool
-    nmi_output = None  # type: bool
-    nmi_previous = None  # type: bool
-    nmi_delay = None  # type: np.uint8
+    nmi_occurred = False  # type: bool
+    nmi_output = False  # type: bool
+    nmi_previous = False  # type: bool
+    nmi_delay = 0  # type: np.uint8
     flag_name_table = None
     flag_increment = None
     flag_sprite_table = None
@@ -62,76 +62,76 @@ class PPU(object):
     oam_address = None  # type: np.uint8
 
     def __init__(self, memory: Memory):
-        self._palette = [(0x75, 0x75, 0x75),
-                         (0x27, 0x1b, 0x8f),
-                         (0x00, 0x00, 0xab),
-                         (0x47, 0x00, 0x9f),
-                         (0x8f, 0x00, 0x77),
-                         (0xab, 0x00, 0x13),
-                         (0xa7, 0x00, 0x00),
-                         (0x7f, 0x0b, 0x00),
-                         (0x43, 0x2f, 0x00),
-                         (0x00, 0x47, 0x00),
-                         (0x00, 0x51, 0x00),
-                         (0x00, 0x3f, 0x17),
-                         (0x1b, 0x3f, 0x5f),
-                         (0x00, 0x00, 0x00),
-                         (0x00, 0x00, 0x00),
-                         (0x00, 0x00, 0x00),
-                         (0xbc, 0xbc, 0xbc),
-                         (0x00, 0x73, 0xef),
-                         (0x23, 0x3b, 0xef),
-                         (0x83, 0x00, 0xf3),
-                         (0xbf, 0x00, 0xbf),
-                         (0xe7, 0x00, 0x5b),
-                         (0xdb, 0x2b, 0x00),
-                         (0xcb, 0x4f, 0x0f),
-                         (0x8b, 0x73, 0x00),
-                         (0x00, 0x97, 0x00),
-                         (0x00, 0xab, 0x00),
-                         (0x00, 0x93, 0x3b),
-                         (0x00, 0x83, 0x8b),
-                         (0x00, 0x00, 0x00),
-                         (0x00, 0x00, 0x00),
-                         (0x00, 0x00, 0x00),
-                         (0xff, 0xff, 0xff),
-                         (0x3f, 0xbf, 0xff),
-                         (0x5f, 0x97, 0xff),
-                         (0xa7, 0x8b, 0xfd),
-                         (0xf7, 0x7b, 0xff),
-                         (0xff, 0x77, 0xb7),
-                         (0xff, 0x77, 0x63),
-                         (0xff, 0x9b, 0x3b),
-                         (0xf3, 0xbf, 0x3f),
-                         (0x83, 0xd3, 0x13),
-                         (0x4f, 0xdf, 0x4b),
-                         (0x58, 0xf8, 0x98),
-                         (0x00, 0xeb, 0xdb),
-                         (0x00, 0x00, 0x00),
-                         (0x00, 0x00, 0x00),
-                         (0x00, 0x00, 0x00),
-                         (0xff, 0xff, 0xff),
-                         (0xab, 0xe7, 0xff),
-                         (0xc7, 0xd7, 0xff),
-                         (0xd7, 0xcb, 0xff),
-                         (0xff, 0xc7, 0xff),
-                         (0xff, 0xc7, 0xdb),
-                         (0xff, 0xbf, 0xb3),
-                         (0xff, 0xdb, 0xab),
-                         (0xff, 0xe7, 0xa3),
-                         (0xe3, 0xff, 0xa3),
-                         (0xab, 0xf3, 0xbf),
-                         (0xb3, 0xff, 0xcf),
-                         (0x9f, 0xff, 0xf3),
-                         (0x00, 0x00, 0x00),
-                         (0x00, 0x00, 0x00),
-                         (0x00, 0x00, 0x00)]
+        self.palette_data = [(0x75, 0x75, 0x75),
+                             (0x27, 0x1b, 0x8f),
+                             (0x00, 0x00, 0xab),
+                             (0x47, 0x00, 0x9f),
+                             (0x8f, 0x00, 0x77),
+                             (0xab, 0x00, 0x13),
+                             (0xa7, 0x00, 0x00),
+                             (0x7f, 0x0b, 0x00),
+                             (0x43, 0x2f, 0x00),
+                             (0x00, 0x47, 0x00),
+                             (0x00, 0x51, 0x00),
+                             (0x00, 0x3f, 0x17),
+                             (0x1b, 0x3f, 0x5f),
+                             (0x00, 0x00, 0x00),
+                             (0x00, 0x00, 0x00),
+                             (0x00, 0x00, 0x00),
+                             (0xbc, 0xbc, 0xbc),
+                             (0x00, 0x73, 0xef),
+                             (0x23, 0x3b, 0xef),
+                             (0x83, 0x00, 0xf3),
+                             (0xbf, 0x00, 0xbf),
+                             (0xe7, 0x00, 0x5b),
+                             (0xdb, 0x2b, 0x00),
+                             (0xcb, 0x4f, 0x0f),
+                             (0x8b, 0x73, 0x00),
+                             (0x00, 0x97, 0x00),
+                             (0x00, 0xab, 0x00),
+                             (0x00, 0x93, 0x3b),
+                             (0x00, 0x83, 0x8b),
+                             (0x00, 0x00, 0x00),
+                             (0x00, 0x00, 0x00),
+                             (0x00, 0x00, 0x00),
+                             (0xff, 0xff, 0xff),
+                             (0x3f, 0xbf, 0xff),
+                             (0x5f, 0x97, 0xff),
+                             (0xa7, 0x8b, 0xfd),
+                             (0xf7, 0x7b, 0xff),
+                             (0xff, 0x77, 0xb7),
+                             (0xff, 0x77, 0x63),
+                             (0xff, 0x9b, 0x3b),
+                             (0xf3, 0xbf, 0x3f),
+                             (0x83, 0xd3, 0x13),
+                             (0x4f, 0xdf, 0x4b),
+                             (0x58, 0xf8, 0x98),
+                             (0x00, 0xeb, 0xdb),
+                             (0x00, 0x00, 0x00),
+                             (0x00, 0x00, 0x00),
+                             (0x00, 0x00, 0x00),
+                             (0xff, 0xff, 0xff),
+                             (0xab, 0xe7, 0xff),
+                             (0xc7, 0xd7, 0xff),
+                             (0xd7, 0xcb, 0xff),
+                             (0xff, 0xc7, 0xff),
+                             (0xff, 0xc7, 0xdb),
+                             (0xff, 0xbf, 0xb3),
+                             (0xff, 0xdb, 0xab),
+                             (0xff, 0xe7, 0xa3),
+                             (0xe3, 0xff, 0xa3),
+                             (0xab, 0xf3, 0xbf),
+                             (0xb3, 0xff, 0xcf),
+                             (0x9f, 0xff, 0xf3),
+                             (0x00, 0x00, 0x00),
+                             (0x00, 0x00, 0x00),
+                             (0x00, 0x00, 0x00)]
 
         self.memory = memory
-        self.palette_data = np.ndarray((32, ), dtype=np.uint8)
+        # self.palette_data = np.ndarray((32, ), dtype=np.uint8)
         self.nametable_data = np.ndarray((2048, ), dtype=np.uint8)
         self.oam_data = np.ndarray((2048, ), dtype=np.uint8)
-        self.frame = Batch()
+        self.frame = 0
 
         self.reset()
 
@@ -456,7 +456,17 @@ class PPU(object):
             self.flag_sprite_zero_hit = 0
             self.flag_sprite_overflow = 0
 
+    def clear_vblank(self) -> None:
+        """
+        Ends the Vertical Blank stage of the frame
+        """
+        self.nmi_occurred = False
+        self.nmi_change()
+
     def set_vblank(self) -> None:
+        """
+        Sets the Vertical Blank stage of the frame
+        """
         self.front, self.back = self.back, self.front
         self.nmi_occurred = 1
         self.nmi_change()
@@ -478,4 +488,44 @@ class PPU(object):
         self.attribute_table_byte = (
             (int(self.memory.read(np.uint8(address))) >> shift) & 3
         ) << 2
+
+    def read_palette(self, address: np.uint16) -> np.uint8:
+        if address >= 16 and address % 4 == 0:
+            address -= 16
+        return self.palette_data[address]
+
+    def write_palette(self, address: np.uint16, value: np.uint8):
+        if address >= 16 and address % 4 == 0:
+            address -= 16
+        self.palette_data[address] = value
+
+    def increment_x(self) -> None:
+        """
+        Increments the v address's horizontal position.
+        """
+        if self.v & 0x001F == 31:
+            self.v &= 0xFFE0
+            self.v ^= 0x0400
+        else:
+            self.v += 1
+
+    def increment_y(self) -> None:
+        """
+        Increments the v address's vertical position.
+        """
+        if self.v & 0x7000 != 0x7000:
+            self.v += 0x1000
+        else:
+            self.v &= 0x8FFF
+            y = (self.v & 0x03E0) >> 5
+            if y == 29:
+                y = 0
+                self.v ^= 0x0800
+            elif y == 31:
+                y = 0
+            else:
+                y += 1
+
+            self.v = (self.v & 0xFC1F) | (y << 5)
+
 

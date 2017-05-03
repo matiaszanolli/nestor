@@ -22,6 +22,7 @@ from modules.apu import APU
 from modules.cpu import CPU
 from modules.memory import Memory
 from modules.ppu import PPU
+from modules.ui import UI
 
 log = logging.getLogger('logger')
 
@@ -29,24 +30,23 @@ log = logging.getLogger('logger')
 class Manager(object):
 
     instance = None  # type: Manager
-    memory = Memory()
-    counter = 0
-    ppu = PPU(memory)
-    cpu = CPU(memory)
+    memory = Memory()  # type: Memory
+    counter = 0  # type: int
+    ppu = PPU(memory)  # type: PPU
+    cpu = CPU(memory)  # type: CPU
     apu = APU()
     cartridge = None  # type: Cartridge
+    ui = None  # type: UI
 
     def __init__(self):
-        self.window = pyglet.window.Window(visible=False)
-        self.window.set_size(512, 448)
-        self.window.on_draw = self.on_draw
-        self.window.set_visible(True)
+        self.ui = UI(on_draw=self.on_draw)
         parser = argparse.ArgumentParser(
             description="Command line options for NEStor")
         parser.add_argument('romfile', metavar="filename", type=str,
                             help="The ROM file to load")
         args = parser.parse_args()
         self.cartridge = Cartridge(args.romfile)
+        self.mapper = self.cartridge.mapper
 
     @classmethod
     def get(cls):
@@ -55,7 +55,7 @@ class Manager(object):
         return cls.instance
 
     def on_draw(self):
-        self.window.clear()
+        self.ui.clear()
         self.ppu.frame.draw()
 
     def step(self):
@@ -78,4 +78,8 @@ if __name__ == "__main__":
     logging.info('Starting...')
 
     manager = Manager.get()
+    manager.reset()
+    while True:
+        manager.step()
+
     pyglet.app.run()

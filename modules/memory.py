@@ -13,13 +13,16 @@ class Memory(object):
         :param length: a custom read length (8 or 16 bits)
         :return: byte
         """
+        from main import Manager
+
+        manager = Manager.get()
 
         if address < 0x2000:
             # The lower 2KB are the system main RAM, so can be assigned directly
             return self._memory[int(address % 0x0800)]
         elif address < 0x4000:
             # PPU registers
-            raise NotImplementedError()  # TODO: Implement PPU operations
+            return manager.ppu.read_register(0x2000 + address % 8)
         elif address < 0x4014:
             # APU registers
             raise NotImplementedError()  # TODO: Implement APU operations
@@ -70,7 +73,7 @@ class Memory(object):
         :param address: uint16
         :return: int
         """
-        return self.read(np.uint16(address), 0x1000)
+        return self.read(address, 0x1000)
 
     def read16bug(self, address: np.uint16):
         """
@@ -80,10 +83,10 @@ class Memory(object):
         :return: word
         """
         a = address
-        b = np.dtype(a & 0xFF00) | np.uint16(a + 1)
+        b = np.uint16(a & 0xFF00) | np.uint16(a + 1)
         lo = self.read(a)
         hi = self.read(b)
-        return np.uint16(np.dtype(hi) << 8 | np.dtype(lo))
+        return (hi << 8) | lo
 
     def write16(self, address, value):
         """

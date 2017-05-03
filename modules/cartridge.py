@@ -1,4 +1,7 @@
 import logging
+import numpy as np
+
+from .mappers import get_mapper
 
 log = logging.getLogger("logging")
 
@@ -10,9 +13,9 @@ class Cartridge(object):
     mapper = None
 
     def __init__(self, filename=None):
+        self.prg = np.ndarray((0x2000, ))
         if filename is not None:
             self.load(filename)
-        self.mapper = 0
 
     def load(self, file):
         log.debug("Reading cartridge '{0}'...".format(file))
@@ -52,8 +55,8 @@ class Cartridge(object):
         self._mapper_id = self._flags6 >> 4
         if header[11:15] is b"\x00\x00\x00\x00":
             self._mapper_id += (self._flags7 >> 4) << 4
-        self.load_mapper()
+        self.mapper = self.load_mapper(self._mapper_id)
         log.debug("Uses mapper: {0}".format(self.mapper.__class__))
 
-    def load_mapper(self):
-        pass  # TODO: Implement mappers
+    def load_mapper(self, mapper_id: int):
+        return get_mapper(self, mapper_id)  # TODO: Implement mappers

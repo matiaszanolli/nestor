@@ -1,4 +1,6 @@
 
 
 class APU(object):
-    pass
+
+    def step(self):
+        pass

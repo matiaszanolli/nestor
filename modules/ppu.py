@@ -54,9 +54,10 @@ class PPU(object):
     flag_sprite_zero_hit = None
 
     tile_data = 0
-    sprite_count = 0
+    sprite_count = None  # type: np.ndarray
+    sprite_positions = None
     front = None
-    background_color = None # type: List[int]
+    background_color = None  # type: List[int]
     attribute_table_byte = None
 
     oam_address = None  # type: np.uint8
@@ -133,7 +134,9 @@ class PPU(object):
         # self.palette_data = np.ndarray((32, ), dtype=np.uint8)
         self.nametable_data = np.ndarray((2048, ), dtype=np.uint8)
         self.oam_data = np.ndarray((2048, ), dtype=np.uint8)
-        self.sprite_indexes = np.ndarray((2048, ), dtype=np.uint8)
+        self.sprite_count = np.ndarray((8, ), dtype=np.uint8)
+        self.sprite_priorities = np.ndarray((8, ), dtype=np.uint8)
+        self.sprite_indexes = np.ndarray((8, ), dtype=np.uint8)
         self.frame = 0
 
         self.reset()
@@ -359,11 +362,41 @@ class PPU(object):
         if cpu.cycles % 2 == 1:
             cpu.stall += 1
 
+    def fetch_tile_data(self):
+        return np.uint32(self.tile_data >> 32)
+
+    def fetch_attribute_table_byte(self):
+        from ..main import Manager  # FIXME must find a better way to resolve these imports
+        v = self.v
+        address = 0x23C0 | (v & 0x0C00) | ((v >> 4) & 0x38) | ((v >> 2) & 0x07)
+        shift = ((v >> 4) & 4) | (v & 2)
+        memory = Manager.memory
+        self.attribute_table_byte = ((memory.read(address) >> shift) & 3) << 2
+
     def background_pixel(self) -> np.uint8:
         if self.flag_show_background == 0:
             return np.uint8(0)
         data = self.fetch_tile_data() >> ((7 - self.x) * 4)
         return np.uint8(data & 0x0F)
+
+    def sprite_pixel(self):
+        if self.flag_show_sprites == 0:
+            return 0, 0  # should revisit this kind of returns, are mostly inherited from Go code
+
+        for i in range(sprite_count):
+            offset = (self.cycle - 1) - int(self.sprite_positions[i])
+
+            if offset < 0 or offset > 7:
+                continue
+
+            offset = 7 - offset
+            color = np.uint8((self.sprite_patterns[i] >> np.uint8(offset * 4)) & 0x0F)
+
+            if color % 4 == 0:
+                continue
+
+            return np.uint8(i), color
+        return 0, 0
 
     def render_pixel(self) -> None:
         x = self.cycle - 1
@@ -462,7 +495,7 @@ class PPU(object):
                 if cycle == 1:
                     self.fetch_nametable_byte()
                 elif cycle == 2:
-                    self.fetch_attribute_byte()
+                    self.fetch_attribute_table_byte()
                 elif cycle == 5:
                     self.fetch_low_tile_byte()
                 elif cycle == 7:

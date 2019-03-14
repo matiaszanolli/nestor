@@ -14,6 +14,7 @@ starting one from scratch.
 """
 import argparse
 import logging
+import threading
 
 import pyglet
 
@@ -27,7 +28,7 @@ from modules.ui import UI
 log = logging.getLogger('logger')
 
 
-class Manager(object):
+class Manager(threading.Thread):
 
     instance = None  # type: Manager
     memory = Memory()  # type: Memory
@@ -39,6 +40,7 @@ class Manager(object):
     ui = None  # type: UI
 
     def __init__(self):
+        super().__init__()
         self.ui = UI(on_draw=self.on_draw)
         parser = argparse.ArgumentParser(
             description="Command line options for NEStor")
@@ -68,6 +70,11 @@ class Manager(object):
             self.apu.step()
         return cpu_cycles
 
+    def run(self):
+        self.reset()
+        while True:
+            self.step()
+
     def reset(self):
         self.cpu.reset()
 
@@ -78,8 +85,6 @@ if __name__ == "__main__":
     logging.info('Starting...')
 
     manager = Manager.get()
-    manager.reset()
-    while True:
-        manager.step()
+    manager.start()
 
     pyglet.app.run()

@@ -168,3 +168,6 @@ Temporary Items
 
 # Test ROMs
 *.nes
+
+.idea
+.python-version

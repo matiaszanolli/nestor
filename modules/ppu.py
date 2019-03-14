@@ -141,8 +141,8 @@ class PPU(object):
         self.scanline = 240
         self.frame_number = 0
         self.write_control(np.uint8(0))
-        self.write_mask(0)
-        self.write_oam_address(0)
+        self.write_mask(np.uint8(0))
+        self.write_oam_address(np.uint8(0))
 
     def read_register(self, address: np.uint16) -> np.uint8:
         """

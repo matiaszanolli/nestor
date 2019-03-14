@@ -58,7 +58,7 @@ class Manager(threading.Thread):
 
     def on_draw(self):
         self.ui.clear()
-        self.ppu.frame.draw()
+        self.ppu.window_frame.draw()
 
     def step(self):
         cpu_cycles = self.cpu.step()
@@ -68,6 +68,7 @@ class Manager(threading.Thread):
             self.mapper.step()
         for _ in range(cpu_cycles):
             self.apu.step()
+        self.ui.generate_frame()
         return cpu_cycles
 
     def run(self):

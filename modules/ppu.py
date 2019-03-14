@@ -62,6 +62,8 @@ class PPU(object):
     oam_address = None  # type: np.uint8
 
     def __init__(self, memory: Memory):
+        self.window_frame = Batch()  # type: Batch
+
         self.palette_data = [(0x75, 0x75, 0x75),
                              (0x27, 0x1b, 0x8f),
                              (0x00, 0x00, 0xab),
@@ -331,7 +333,7 @@ class PPU(object):
  
         :param value: byte
         """
-        self.write(self.v, value)
+        self.v = np.uint16(value)
         if self.flag_increment == 0:
             self.v += 1
         else:

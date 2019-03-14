@@ -16,13 +16,13 @@ class UI(object):
         self.window.clear()
 
     def generate_frame(self):
-        from ..main import Manager
+        from main import Manager
         manager = Manager.get()
         ppu = manager.ppu
         memory = manager.memory
         log.debug("PPU: Generating new frame...")
         self.sprites_to_draw = []
-        self.frame = pyglet.graphics.Batch()
+        ppu.window_frame = pyglet.graphics.Batch()
         #background_color = list(self._palette[self.memory._ram[0x3f00]])
         background_color = [255, 255, 255]
         background_palette = [ppu.palette_data[x]
@@ -31,4 +31,4 @@ class UI(object):
                           for x in memory._memory[0x3f11:0x3f20]]
 
         background = pyglet.image.ImageData(512, 448, "RGB", bytes(background_color * 512 * 448))
-        self.sprites_to_draw.append(pyglet.sprite.Sprite(background, batch=self.frame))
+        self.sprites_to_draw.append(pyglet.sprite.Sprite(background, batch=ppu.window_frame))

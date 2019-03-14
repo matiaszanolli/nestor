@@ -1,5 +1,6 @@
 import pyglet
 import logging
+import numpy as np
 
 log = logging.getLogger('logger')
 
@@ -23,8 +24,8 @@ class UI(object):
         log.debug("PPU: Generating new frame...")
         self.sprites_to_draw = []
         ppu.window_frame = pyglet.graphics.Batch()
-        #background_color = list(self._palette[self.memory._ram[0x3f00]])
-        background_color = [255, 255, 255]
+        background_color = list(ppu.palette_data[memory.read(np.uint16(0x3f00))])
+        ppu.background_color = [255, 255, 255]
         background_palette = [ppu.palette_data[x]
                               for x in memory._memory[0x3f01:0x3f10]]
         sprite_palette = [ppu.palette_data[x]

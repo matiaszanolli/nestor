@@ -56,7 +56,7 @@ class PPU(object):
     tile_data = 0
     sprite_count = 0
     front = None
-    back = None
+    background_color = None # type: List[int]
     attribute_table_byte = None
 
     oam_address = None  # type: np.uint8
@@ -133,6 +133,7 @@ class PPU(object):
         # self.palette_data = np.ndarray((32, ), dtype=np.uint8)
         self.nametable_data = np.ndarray((2048, ), dtype=np.uint8)
         self.oam_data = np.ndarray((2048, ), dtype=np.uint8)
+        self.sprite_indexes = np.ndarray((2048, ), dtype=np.uint8)
         self.frame = 0
 
         self.reset()
@@ -358,6 +359,44 @@ class PPU(object):
         if cpu.cycles % 2 == 1:
             cpu.stall += 1
 
+    def background_pixel(self) -> np.uint8:
+        if self.flag_show_background == 0:
+            return np.uint8(0)
+        data = self.fetch_tile_data() >> ((7 - self.x) * 4)
+        return np.uint8(data & 0x0F)
+
+    def render_pixel(self) -> None:
+        x = self.cycle - 1
+        y = self.scanline
+        background = self.background_pixel()
+        i, sprite = self.sprite_pixel()
+
+        if x < 8:
+            if self.flag_show_left_background == 0:
+                background = 0
+            if self.flag_show_left_sprites == 0:
+                sprite = 0
+
+        b = background % 4 != 0
+        s = sprite % 4 != 0
+
+        if not b:
+            if not s:
+                color = bytes(0)
+            else:
+                color = sprite | 0x10
+        elif not s:
+            color = background
+        else:
+            if self.sprite_indexes[i] == 0 and x < 255:
+                self.flag_sprite_zero_hit = 1
+            if self.sprite_priorities[i] == 0:
+                color = sprite | 0x10
+            else:
+                color = background
+        c = self.palette[self.read_palette(np.uint16(color) % 64)]
+        self.background_color = [x, y, c]  # FIXME: If it fails, it's a possible failure point
+
     def nmi_change(self) -> None:
         """
         Changes the NMI interrupt values.
@@ -469,7 +508,7 @@ class PPU(object):
         """
         Sets the Vertical Blank stage of the frame
         """
-        self.front, self.back = self.back, self.front
+        self.front, self.background_color = self.background_color, self.front
         self.nmi_occurred = 1
         self.nmi_change()
 

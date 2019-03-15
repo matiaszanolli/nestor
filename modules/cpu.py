@@ -350,7 +350,8 @@ class CPU(object):
         self.v = (flags >> 6) & 1
         self.n = (flags >> 7) & 1
 
-    def pages_differ(self, a, b):
+    @staticmethod
+    def pages_differ(a, b):
         """
         Returns true if the two addresses reference different pages.
         :param a: memory address 
@@ -385,7 +386,7 @@ class CPU(object):
         """
         self.stack_push(self.pc)
         self.php(None)
-        self.pc = self.memory.read16(0xFFFA)
+        self.pc = self.memory.read16(np.uint16(0xFFFA))
         self.i = 1
         # The NES has an interrupt latency of 7 cycles, which means it takes 7
         # CPU cycles to begin executing the interrupt handler
@@ -397,7 +398,7 @@ class CPU(object):
         """
         self.stack_push(self.pc)
         self.php(None)
-        self.pc = self.memory.read16(0xFFFE)
+        self.pc = self.memory.read16(np.uint16(0xFFFE))
         self.i = 1
         self.cycles += 7
 

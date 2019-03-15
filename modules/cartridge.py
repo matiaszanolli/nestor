@@ -8,9 +8,9 @@ log = logging.getLogger("logging")
 
 class Cartridge(object):
 
-    prg = None
-    chr = None
-    mapper = None
+    prg = None  # type: np.ndarray
+    chr = None  # type: np.ndarray
+    mapper = None  # type: np.ndarray
 
     def __init__(self, filename=None):
         self.prg = np.ndarray((0x2000, ))

@@ -36,29 +36,32 @@ class PPU(object):
     nmi_output = False  # type: bool
     nmi_previous = False  # type: bool
     nmi_delay = 0  # type: np.uint8
-    flag_name_table = None
-    flag_increment = None
-    flag_sprite_table = None
-    flag_background_table = None
-    flag_sprite_size = None
-    flag_master_slave = None
-    flag_grayscale = None
-    flag_show_left_background = None
-    flag_show_left_sprites = None
-    flag_show_background = None
-    flag_show_sprites = None
-    flag_red_tint = None
-    flag_green_tint = None
-    flag_blue_tint = None
-    flag_sprite_overflow = None
-    flag_sprite_zero_hit = None
+    flag_name_table = None  # type: np.uint8
+    flag_increment = None  # type: np.uint8
+    flag_sprite_table = None  # type: np.uint8
+    flag_background_table = None  # type: np.uint8
+    flag_sprite_size = None  # type: np.uint8
+    flag_master_slave = None  # type: np.uint8
+    flag_grayscale = None  # type: np.uint8
+    flag_show_left_background = None  # type: np.uint8
+    flag_show_left_sprites = None  # type: np.uint8
+    flag_show_background = None  # type: np.uint8
+    flag_show_sprites = None  # type: np.uint8
+    flag_red_tint = None  # type: np.uint8
+    flag_green_tint = None  # type: np.uint8
+    flag_blue_tint = None  # type: np.uint8
+    flag_sprite_overflow = None  # type: np.uint8
+    flag_sprite_zero_hit = None  # type: np.uint8
 
-    tile_data = 0
+    tile_data = None  # type: np.uint64
     sprite_count = None  # type: np.ndarray
     sprite_positions = None
     front = None
     background_color = None  # type: List[int]
     attribute_table_byte = None
+    name_table_byte = None  # type: np.uint8
+    low_tile_byte = None  # type: np.uint8
+    high_tile_byte = None  # type: np.uint8
 
     oam_address = None  # type: np.uint8
 
@@ -137,6 +140,7 @@ class PPU(object):
         self.sprite_count = np.ndarray((8, ), dtype=np.uint8)
         self.sprite_priorities = np.ndarray((8, ), dtype=np.uint8)
         self.sprite_indexes = np.ndarray((8, ), dtype=np.uint8)
+        self.sprite_patterns = np.ndarray((8, ), dtype=np.uint32)
         self.frame = 0
 
         self.reset()
@@ -373,6 +377,36 @@ class PPU(object):
         memory = Manager.memory
         self.attribute_table_byte = ((memory.read(address) >> shift) & 3) << 2
 
+    def fetch_low_tile_byte(self):
+        from ..main import Manager
+        fine_y = (self.v >> 12) & 7
+        table = self.flag_background_table
+        tile = self.name_table_byte
+        address = 0x1000 * np.uint16(table) + np.uint16(tile) * 16 + fine_y
+        memory = Manager.memory
+        self.low_tile_byte = memory.read(address)
+
+    def fetch_high_tile_byte(self):
+        from ..main import Manager
+        fine_y = (self.v >> 12) & 7
+        table = self.flag_background_table
+        tile = self.name_table_byte
+        address = 0x1000 * np.uint16(table) + np.uint16(tile) * 16 + fine_y
+        memory = Manager.memory
+        self.high_tile_byte = memory.read(address + 8)
+
+    def store_tile_data(self):
+        data = np.uint32(0)
+        for i in range(8):
+            a = self.attribute_table_byte
+            p1 = (self.low_tile_byte & 0x80) >> 7
+            p2 = (self.high_tile_byte & 0x80) >> 6
+            self.low_tile_byte << 1
+            self.high_tile_byte << 1
+            data <<= 4
+            data |= np.uint32(a | p1 | p2)
+        self.tile_data |= np.uint64(data)
+
     def background_pixel(self) -> np.uint8:
         if self.flag_show_background == 0:
             return np.uint8(0)
@@ -383,7 +417,7 @@ class PPU(object):
         if self.flag_show_sprites == 0:
             return 0, 0  # should revisit this kind of returns, are mostly inherited from Go code
 
-        for i in range(sprite_count):
+        for i in range(self.sprite_count):
             offset = (self.cycle - 1) - int(self.sprite_positions[i])
 
             if offset < 0 or offset > 7:
@@ -429,6 +463,75 @@ class PPU(object):
                 color = background
         c = self.palette[self.read_palette(np.uint16(color) % 64)]
         self.background_color = [x, y, c]  # FIXME: If it fails, it's a possible failure point
+
+    def fetch_sprite_pattern(self, i: int, row: int) -> np.uint32:
+        from ..main import Manager
+        tile = self.oam_data[i * 4 + 1]
+        attributes = self.oam_data[i * 4 + 2]
+
+        if self.flag_sprite_size == 0:
+            if attributes & 0x80 == 0x80:
+                row = 7 - row
+            table = self.flag_sprite_table
+        else:
+            if attributes & 0x80 == 0x80:
+                row = 15 - row
+            table = tile & 1
+            tile &= 0xFE
+            if row > 7:
+                tile += 1
+                row -= 8
+
+        address = 0x1000 * np.uint16(table) + np.uint16(tile) * 16 + np.uint16(row)  # type: np.uint16
+        a = (attributes & 3) << 2
+        memory = Manager.memory
+        low_tile_byte = memory.read(address)
+        high_tile_byte = memory.read(address + 8)
+        data = np.uint32(0)
+        for i in range(8):
+            if attributes & 0x40 == 0x40:
+                p1 = (low_tile_byte & 1) << 0
+                p2 = (high_tile_byte & 1) << 1
+                low_tile_byte >>= 1
+                high_tile_byte >>= 1
+            else:
+                p1 = (low_tile_byte & 0x80) >> 7
+                p2 = (high_tile_byte & 0x80) >> 6
+                low_tile_byte <<= 1
+                high_tile_byte <<= 1
+            data <<= 4
+            data |= np.uint32(a | p1 | p2)
+        return data
+
+    def evaluate_sprites(self) -> None:
+        if self.flag_sprite_size == 0:
+            h = 8
+        else:
+            h = 16
+        count = 0
+
+        for i in range(64):
+            y = self.oam_data[i * 4 + 0]
+            a = self.oam_data[i * 4 + 2]
+            x = self.oam_data[i * 4 + 3]
+            row = self.scanline - int(y)
+
+            if row < 0 or row >= h:
+                continue
+
+            if count < 8:
+                self.sprite_patterns[count] = self.fetch_sprite_pattern(i, row)
+                self.sprite_positions[count] = x
+                self.sprite_priorities[count] = (a >> 5) & 1
+                self.sprite_indexes[count] = np.uint8(i)
+
+            count += 1
+
+        if count > 8:
+            count = 8
+            self.flag_sprite_overflow = 1
+
+        self.sprite_count = count
 
     def nmi_change(self) -> None:
         """

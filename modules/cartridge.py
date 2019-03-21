@@ -29,6 +29,9 @@ class Cartridge(object):
             # Read CHR ROM
             self.chr = f.read(self._chr_rom_pages * 0x2000)
 
+            self.mapper = self.load_mapper(self._mapper_id)
+            log.debug("Uses mapper: {0}".format(self.mapper.__class__))
+
     def _parse_header(self, header: bytes) -> None:
         # Verify legal header.
         if header[0:4] != b"NES\x1a":
@@ -55,8 +58,6 @@ class Cartridge(object):
         self._mapper_id = self._flags6 >> 4
         if header[11:15] is b"\x00\x00\x00\x00":
             self._mapper_id += (self._flags7 >> 4) << 4
-        self.mapper = self.load_mapper(self._mapper_id)
-        log.debug("Uses mapper: {0}".format(self.mapper.__class__))
 
     def load_mapper(self, mapper_id: int):
         return get_mapper(self, mapper_id)  # TODO: Implement mappers

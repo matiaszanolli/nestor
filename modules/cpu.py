@@ -304,16 +304,16 @@ class CPU(object):
         self.pc = info.address
         self.add_branch_cycles(info)
 
-    def stack_push(self, value) -> None:
+    def stack_push(self, value: np.uint8) -> None:
         self.sp -= 1
-        self.memory.write(0x100 + self.sp, value)
+        self.memory.write(0x100 | np.uint16(self.sp), value)
 
     def stack_pull(self):
         val = self.memory.read(0x100 + self.sp)
         self.sp += 1
         return val
 
-    def stack_push16(self, value):
+    def stack_push16(self, value: np.uint16):
         """
         Pushes two bytes into the stack.
         :param value: 16-bit integer
@@ -327,8 +327,8 @@ class CPU(object):
         """
         Pulls two bytes from the stack.
         """
-        lo = self.stack_pull16()
-        hi = self.stack_pull16()
+        lo = self.stack_pull()
+        hi = self.stack_pull()
         return hi << 8 | lo
 
     def flags(self):
@@ -529,7 +529,7 @@ class CPU(object):
         self.stack_push16(self.pc)
         self.php(info)
         self.sei(info)
-        self.pc = self.memory.read16(np.uint8(0xFFFE))
+        self.pc = self.memory.read16(np.uint16(0xFFFE))
 
     def bvc(self, info: StepInfo) -> None:
         """

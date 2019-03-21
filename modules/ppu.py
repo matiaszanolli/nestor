@@ -30,29 +30,29 @@ class PPU(object):
     w = 0  # type: np.uint8
     f = 0  # type: np.uint8
 
-    register = None
+    register = 0  # type: np.uint8
 
     # Flags
     nmi_occurred = False  # type: bool
     nmi_output = False  # type: bool
     nmi_previous = False  # type: bool
-    nmi_delay = 0  # type: np.uint8
-    flag_name_table = None  # type: np.uint8
-    flag_increment = None  # type: np.uint8
-    flag_sprite_table = None  # type: np.uint8
-    flag_background_table = None  # type: np.uint8
-    flag_sprite_size = None  # type: np.uint8
-    flag_master_slave = None  # type: np.uint8
-    flag_grayscale = None  # type: np.uint8
-    flag_show_left_background = None  # type: np.uint8
-    flag_show_left_sprites = None  # type: np.uint8
-    flag_show_background = None  # type: np.uint8
-    flag_show_sprites = None  # type: np.uint8
-    flag_red_tint = None  # type: np.uint8
-    flag_green_tint = None  # type: np.uint8
-    flag_blue_tint = None  # type: np.uint8
-    flag_sprite_overflow = None  # type: np.uint8
-    flag_sprite_zero_hit = None  # type: np.uint8
+    nmi_delay = np.uint8(0)  # type: np.uint8
+    flag_name_table = np.uint8(0)  # type: np.uint8
+    flag_increment = np.uint8(0)  # type: np.uint8
+    flag_sprite_table = np.uint8(0)  # type: np.uint8
+    flag_background_table = np.uint8(0)  # type: np.uint8
+    flag_sprite_size = np.uint8(0)  # type: np.uint8
+    flag_master_slave = np.uint8(0)  # type: np.uint8
+    flag_grayscale = np.uint8(0)  # type: np.uint8
+    flag_show_left_background = np.uint8(0)  # type: np.uint8
+    flag_show_left_sprites = np.uint8(0)  # type: np.uint8
+    flag_show_background = np.uint8(0)  # type: np.uint8
+    flag_show_sprites = np.uint8(0)  # type: np.uint8
+    flag_red_tint = np.uint8(0)  # type: np.uint8
+    flag_green_tint = np.uint8(0)  # type: np.uint8
+    flag_blue_tint = np.uint8(0)  # type: np.uint8
+    flag_sprite_overflow = np.uint8(0)  # type: np.uint8
+    flag_sprite_zero_hit = np.uint8(0)  # type: np.uint8
 
     tile_data = None  # type: np.uint64
     sprite_count = None  # type: np.ndarray
@@ -540,7 +540,7 @@ class PPU(object):
         """
         nmi = self.nmi_output and self.nmi_occurred
         if nmi and not self.nmi_previous:  # bugfix taken from fogleman's code
-            self.nmi_delay = 15
+            self.nmi_delay = np.uint8(15)
         self.nmi_previous = nmi
 
     @staticmethod

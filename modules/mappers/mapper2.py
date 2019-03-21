@@ -12,7 +12,7 @@ class Mapper2(BaseMapper):
 
     def __init__(self, cartridge):
         super().__init__(cartridge)
-        self.prg_banks = len(self.prg) / 0x4000
+        self.prg_banks = len(self.prg) // 0x4000
         self.prg_bank_1 = 0
         self.prg_bank_2 = self.prg_banks - 1
 

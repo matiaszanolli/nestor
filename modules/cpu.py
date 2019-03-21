@@ -269,8 +269,6 @@ class CPU(object):
             print('address: ' + str(address))
             print('pc: ' + str(self.pc))
             opcode(info)
-        else:
-            raise Exception('Unknown opcode: ' + opcode_name)
 
         return int(self.cycles - cycles)
 

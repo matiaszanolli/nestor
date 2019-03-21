@@ -28,7 +28,7 @@ class Memory(object):
             raise NotImplementedError()  # TODO: Implement APU operations
         elif address == 0x4014:
             # PPU register
-            raise NotImplementedError()  # TODO: Implement PPU operations
+            return manager.ppu.read_register(address)
         elif address in (0x4015, 0x4017):
             # More APU registers
             raise NotImplementedError()  # TODO: Implement APU operations
@@ -36,7 +36,8 @@ class Memory(object):
             # I/O registers
             raise NotImplementedError()  # TODO: Implement I/O operations
         else:
-            raise ValueError('Unhandled memory read at {}'.format(address))
+            # Cartridge mapper registers
+            return manager.mapper.read(address)
 
     def write(self, address: np.uint16, value: np.uint8, length=0x0800):
         """

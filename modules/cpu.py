@@ -23,6 +23,13 @@ class InstructionMode(object):
     MODE_ZERO_PAGE_Y = 12
 
 
+class Interrupt(object):
+
+    IRQ = False
+    NMI = False
+    NONE = False
+
+
 class StepInfo(object):
     pc = None  # type: np.uint16
     address = None  # type: np.uint8
@@ -164,7 +171,7 @@ class CPU(object):
     u = None  # unused flag
     v = None  # overflow flag
     n = None  # negative flag
-    interrupt = None  # interrupt type to perform
+    interrupt = Interrupt.NONE  # interrupt type to perform
     stall = None  # number of cycles to stall
     table = []
     memory = None  # type: 'Memory'
@@ -188,11 +195,11 @@ class CPU(object):
             return 1
 
         # Handle interrupts
-        if self.interrupts['NMI']:
+        if self.interrupt == Interrupt.NMI:
             self.nmi()
-        elif self.interrupts['IRQ']:
+        elif self.interrupt == Interrupt.IRQ:
             self.irq()
-        self.interrupt = None
+        self.interrupt = Interrupt.NONE
 
         page_crossed = False
         address = None
@@ -258,7 +265,12 @@ class CPU(object):
         # Execute the operation
         opcode = getattr(self, opcode_name, None)
         if opcode:
+            print('Executing opcode: ' + opcode_name)
+            print('address: ' + str(address))
+            print('pc: ' + str(self.pc))
             opcode(info)
+        else:
+            raise Exception('Unknown opcode: ' + opcode_name)
 
         return int(self.cycles - cycles)
 
@@ -293,13 +305,6 @@ class CPU(object):
         """
         self.pc = info.address
         self.add_branch_cycles(info)
-
-    def trigger_interrupt(self, interrupt) -> None:
-        """
-        Sets an interrupt for the next cycle.
-        :param interrupt: an interrupt name (NMI, IRQ)
-        """
-        self.interrupts[interrupt] = True
 
     def stack_push(self, value) -> None:
         self.sp -= 1

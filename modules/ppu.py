@@ -3,6 +3,7 @@ import numpy as np
 from typing import List
 from pyglet.graphics import Batch
 from .memory import Memory
+from .cpu import Interrupt
 
 
 class PPU(object):
@@ -544,9 +545,7 @@ class PPU(object):
 
     @staticmethod
     def trigger_nmi() -> None:
-        from ..main import Manager
-        cpu = Manager.cpu
-        cpu.trigger_interrupt(cpu.interrupts['NMI'])
+        Interrupt.NMI = True
 
     def tick(self) -> None:
         """

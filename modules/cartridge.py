@@ -11,6 +11,7 @@ class Cartridge(object):
     prg = None  # type: np.ndarray
     chr = None  # type: np.ndarray
     mapper = None  # type: np.ndarray
+    sram = np.ndarray(0x2000, dtype=np.uint8)
 
     def __init__(self, filename=None):
         self.prg = np.ndarray((0x2000, ))

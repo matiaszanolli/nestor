@@ -4,7 +4,7 @@ from typing import List
 
 class Memory(object):
     def __init__(self):
-        self._memory = [0] * 0xffff  # type: List[np.uint16]
+        self._memory = np.zeros(0xffff, dtype=np.uint16)   # type: List[np.uint16]
 
     def read(self, address: np.uint16) -> np.uint8:
         """
@@ -14,7 +14,7 @@ class Memory(object):
         """
         from main import Manager
 
-        manager = Manager.get()
+        manager = Manager()
 
         if address < 0x2000:
             # The lower 2KB are the system main RAM, so can be assigned directly
@@ -47,7 +47,7 @@ class Memory(object):
         """
         from main import Manager
 
-        manager = Manager.get()
+        manager = Manager()
 
         if address < 0x2000:
             # The lower 2KB are the system main RAM, so can be assigned directly
@@ -111,9 +111,8 @@ class PPUMemory(object):
     MIRROR_SINGLE_1 = 3
     MIRROR_FOUR = 4
 
-    def __init__(self):
-        from ..main import Manager
-        self.console = Manager.get()
+    def __init__(self, console):
+        self.console = console
 
     def read(self, address: np.uint16) -> np.uint8:
         address = address % 0x4000
@@ -121,4 +120,9 @@ class PPUMemory(object):
             return self.console.mapper.read(address)
         elif address < 0x3F00:
             pass
+        else:
+            raise NotImplementedError()
         # TODO: finish
+
+    def write(self, address: np.uint16, value: np.uint16) -> None:
+        raise NotImplementedError()

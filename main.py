@@ -18,30 +18,41 @@ import threading
 
 import pyglet
 
-from modules.cartridge import Cartridge
-from modules.apu import APU
-from modules.cpu import CPU
-from modules.memory import Memory
-from modules.ppu import PPU
-from modules.ui import UI
 
 log = logging.getLogger('logger')
 
 
+def singleton(cls, *args, **kw):
+    instances = {}
+
+    def _singleton():
+        if cls not in instances:
+            instances[cls] = cls(*args, **kw)
+        return instances[cls]
+
+    return _singleton
+
+
+@singleton
 class Manager(threading.Thread):
 
-    instance = None  # type: Manager
-    memory = Memory()  # type: Memory
-    counter = 0  # type: int
-    ppu = PPU(memory)  # type: PPU
-    cpu = CPU(memory)  # type: CPU
-    apu = APU()
-    cartridge = None  # type: Cartridge
-    ui = None  # type: UI
-
     def __init__(self):
+        from modules.cartridge import Cartridge
+        from modules.apu import APU
+        from modules.cpu import CPU
+        from modules.memory import Memory, PPUMemory
+        from modules.ppu import PPU
+        from modules.ui import UI
+
         super().__init__()
+
+        self.memory = Memory()  # type: Memory
+        self.ppu = PPU(self.memory)  # type: PPU
+        self.cpu = CPU(self.memory)  # type: CPU
+        self.counter = 0  # type: int
+        self.apu = APU()
         self.ui = UI(on_draw=self.on_draw)
+        self.ppu_memory = PPUMemory(self)
         parser = argparse.ArgumentParser(
             description="Command line options for NEStor")
         parser.add_argument('romfile', metavar="filename", type=str,
@@ -49,12 +60,6 @@ class Manager(threading.Thread):
         args = parser.parse_args()
         self.cartridge = Cartridge(args.romfile)
         self.mapper = self.cartridge.mapper
-
-    @classmethod
-    def get(cls):
-        if not cls.instance:
-            cls.instance = Manager()
-        return cls.instance
 
     def on_draw(self):
         self.ui.clear()
@@ -85,7 +90,7 @@ if __name__ == "__main__":
     logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
     logging.info('Starting...')
 
-    manager = Manager.get()
+    manager = Manager()
     manager.start()
 
     pyglet.app.run()

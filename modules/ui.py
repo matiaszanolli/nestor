@@ -12,13 +12,14 @@ class UI(object):
         self.window.set_size(512, 448)
         self.window.on_draw = on_draw
         self.window.set_visible(True)
+        self.sprites_to_draw = []
 
     def clear(self):
         self.window.clear()
 
     def generate_frame(self):
         from main import Manager
-        manager = Manager.get()
+        manager = Manager()
         ppu = manager.ppu
         memory = manager.memory
         log.debug("PPU: Generating new frame...")

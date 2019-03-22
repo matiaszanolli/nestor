@@ -4,6 +4,7 @@ from typing import List
 from pyglet.graphics import Batch
 from .memory import Memory
 from .cpu import Interrupt
+from main import Manager
 
 
 class PPU(object):
@@ -342,7 +343,10 @@ class PPU(object):
  
         :param value: byte
         """
-        self.v = np.uint16(value)
+        from ..main import Manager
+        manager = Manager()
+
+        manager.ppu_memory.write(self.v, np.uint16(value))
         if self.flag_increment == 0:
             self.v += 1
         else:
@@ -355,9 +359,8 @@ class PPU(object):
         internal PPU OAM.
         :param value: byte
         """
-        from ..main import Manager
-        memory = Manager.memory
-        cpu = Manager.cpu
+        memory = Manager().memory
+        cpu = Manager().cpu
         address = np.uint8(np.uint16(value) << 8)
         for i in range(256):
             self.oam_data[self.oam_address] = memory.read(address)
@@ -371,7 +374,6 @@ class PPU(object):
         return np.uint32(self.tile_data >> 32)
 
     def fetch_attribute_table_byte(self):
-        from ..main import Manager  # FIXME must find a better way to resolve these imports
         v = self.v
         address = 0x23C0 | (v & 0x0C00) | ((v >> 4) & 0x38) | ((v >> 2) & 0x07)
         shift = ((v >> 4) & 4) | (v & 2)
@@ -379,7 +381,6 @@ class PPU(object):
         self.attribute_table_byte = ((memory.read(address) >> shift) & 3) << 2
 
     def fetch_low_tile_byte(self):
-        from ..main import Manager
         fine_y = (self.v >> 12) & 7
         table = self.flag_background_table
         tile = self.name_table_byte
@@ -388,7 +389,6 @@ class PPU(object):
         self.low_tile_byte = memory.read(address)
 
     def fetch_high_tile_byte(self):
-        from ..main import Manager
         fine_y = (self.v >> 12) & 7
         table = self.flag_background_table
         tile = self.name_table_byte
@@ -466,7 +466,6 @@ class PPU(object):
         self.background_color = [x, y, c]  # FIXME: If it fails, it's a possible failure point
 
     def fetch_sprite_pattern(self, i: int, row: int) -> np.uint32:
-        from ..main import Manager
         tile = self.oam_data[i * 4 + 1]
         attributes = self.oam_data[i * 4 + 2]
 
@@ -485,7 +484,7 @@ class PPU(object):
 
         address = 0x1000 * np.uint16(table) + np.uint16(tile) * 16 + np.uint16(row)  # type: np.uint16
         a = (attributes & 3) << 2
-        memory = Manager.memory
+        memory = Manager().memory
         low_tile_byte = memory.read(address)
         high_tile_byte = memory.read(address + 8)
         data = np.uint32(0)
@@ -576,8 +575,7 @@ class PPU(object):
         Executes a PPU cycle.
         """
         self.tick()
-        rendering_enabled = self.flag_show_background != 0 \
-                            or self.flag_show_sprites != 0
+        rendering_enabled = self.flag_show_background != 0 or self.flag_show_sprites != 0
         pre_line = self.scanline == 261
         visible_line = self.scanline < 240
         render_line = pre_line or visible_line
@@ -703,5 +701,3 @@ class PPU(object):
                 y += 1
 
             self.v = (self.v & 0xFC1F) | (y << 5)
-
-

@@ -25,9 +25,9 @@ class InstructionMode(object):
 
 class Interrupt(object):
 
-    IRQ = False
-    NMI = False
-    NONE = False
+    IRQ = 1
+    NMI = 2
+    NONE = 0
 
 
 class StepInfo(object):
@@ -150,11 +150,6 @@ class CPU(object):
         'SED', 'SBC', 'NOP', 'ISC', 'NOP', 'SBC', 'INC', 'ISC',
     ]
 
-    interrupts = {
-        'NMI': False,  # non maskable interrupt
-        'IRQ': False  # IRQ interrupt
-    }
-
     frequency = 1789773
 
     cycles = 0  # type: np.uint64
@@ -163,16 +158,16 @@ class CPU(object):
     a = 0  # accumulator
     x = 0  # X register
     y = 0  # Y register
-    c = None  # carry flag
-    z = None  # zero flag
-    i = None  # interrupt disable flag
-    d = None  # decimal mode flag
-    b = None  # break command flag
-    u = None  # unused flag
-    v = None  # overflow flag
-    n = None  # negative flag
+    c = 0  # carry flag
+    z = 0  # zero flag
+    i = 0  # interrupt disable flag
+    d = 0  # decimal mode flag
+    b = 0  # break command flag
+    u = 0  # unused flag
+    v = 0  # overflow flag
+    n = 0  # negative flag
     interrupt = Interrupt.NONE  # interrupt type to perform
-    stall = None  # number of cycles to stall
+    stall = 0  # number of cycles to stall
     table = []
     memory = None  # type: 'Memory'
 
@@ -306,7 +301,7 @@ class CPU(object):
 
     def stack_push(self, value: np.uint8) -> None:
         self.sp -= 1
-        self.memory.write(0x100 | np.uint16(self.sp), value)
+        self.memory.write(np.uint16(0x100 | np.uint16(self.sp)), value)
 
     def stack_pull(self):
         val = self.memory.read(0x100 + self.sp)

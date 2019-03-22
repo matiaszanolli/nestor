@@ -265,6 +265,7 @@ class CPU(object):
             print('pc: ' + str(self.pc))
             opcode(info)
 
+        print(f'cycles: {self.cycles}')
         return int(self.cycles - cycles)
 
     def set_n(self, value):

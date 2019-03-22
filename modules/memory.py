@@ -30,7 +30,7 @@ class Memory(object):
             return manager.ppu.read_register(address)
         elif address in (0x4015, 0x4017):
             # More APU registers
-            raise NotImplementedError()  # TODO: Implement APU operations
+            return np.uint8(0)
         elif address == 0x4016 or address < 0x6000:
             # I/O registers
             raise NotImplementedError()  # TODO: Implement I/O operations

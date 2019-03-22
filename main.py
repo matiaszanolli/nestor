@@ -73,7 +73,6 @@ class Manager(threading.Thread):
             self.mapper.step()
         for _ in range(cpu_cycles):
             self.apu.step()
-        self.ui.generate_frame()
         return cpu_cycles
 
     def run(self):

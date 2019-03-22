@@ -343,7 +343,6 @@ class PPU(object):
  
         :param value: byte
         """
-        from ..main import Manager
         manager = Manager()
 
         manager.ppu_memory.write(self.v, np.uint16(value))
@@ -566,6 +565,9 @@ class PPU(object):
             self.cycle = 0
             self.scanline += 1
             if self.scanline > 261:
+                # FIXME: Possible fuckup point, but those are the risks of coding wasted i guess
+                # The whole frame should be ready to be shown by now (I guess)
+                Manager().ui.generate_frame()
                 self.scanline = 0
                 self.frame += 1
                 self.f ^= 1

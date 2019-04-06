@@ -65,7 +65,8 @@ class PPU(object):
     low_tile_byte = None  # type: np.uint8
     high_tile_byte = None  # type: np.uint8
 
-    oam_address = None  # type: np.uint8
+    oam_address = np.uint8(0)  # type: np.uint8
+    buffered_data = np.uint8(0)  # type: np.uint8
 
     def __init__(self, memory: Memory):
         self.window_frame = Batch()  # type: Batch

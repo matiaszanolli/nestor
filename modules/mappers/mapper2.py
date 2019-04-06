@@ -32,7 +32,7 @@ class Mapper2(BaseMapper):
             index = int(address) - 0x6000
             return self.sram[index]
         else:
-            raise Exception(f'unhandled mapper2 read at address: 0x{address}')
+            raise Exception(f'unhandled mapper2 read at address: {hex(address)}')
 
     def write(self, address: np.uint16, value: np.uint8):
         if address < 0x2000:
@@ -43,4 +43,4 @@ class Mapper2(BaseMapper):
             index = int(address) - 0x6000
             self.sram[index] = value
         else:
-            raise Exception(f'unhandled mapper2 write at address: 0x{address}')
+            raise Exception(f'unhandled mapper2 write at address: {hex(address)}')

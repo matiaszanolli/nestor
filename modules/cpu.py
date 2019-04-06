@@ -43,7 +43,7 @@ class StepInfo(object):
 
 class CPU(object):
 
-    instruction_modes = [
+    instruction_modes = np.asarray([
         6, 7, 6, 7, 11, 11, 11, 11, 6, 5, 4, 5, 1, 1, 1, 1,
         10, 9, 6, 9, 12, 12, 12, 12, 6, 3, 6, 3, 2, 2, 2, 2,
         1, 7, 6, 7, 11, 11, 11, 11, 6, 5, 4, 5, 1, 1, 1, 1,
@@ -60,8 +60,8 @@ class CPU(object):
         10, 9, 6, 9, 12, 12, 12, 12, 6, 3, 6, 3, 2, 2, 2, 2,
         5, 7, 5, 7, 11, 11, 11, 11, 6, 5, 6, 5, 1, 1, 1, 1,
         10, 9, 6, 9, 12, 12, 12, 12, 6, 3, 6, 3, 2, 2, 2, 2,
-    ]
-    instruction_sizes = [
+    ])
+    instruction_sizes = np.asarray([
         1, 2, 0, 0, 2, 2, 2, 0, 1, 2, 1, 0, 3, 3, 3, 0,
         2, 2, 0, 0, 2, 2, 2, 0, 1, 3, 1, 0, 3, 3, 3, 0,
         3, 2, 0, 0, 2, 2, 2, 0, 1, 2, 1, 0, 3, 3, 3, 0,
@@ -78,8 +78,8 @@ class CPU(object):
         2, 2, 0, 0, 2, 2, 2, 0, 1, 3, 1, 0, 3, 3, 3, 0,
         2, 2, 0, 0, 2, 2, 2, 0, 1, 2, 1, 0, 3, 3, 3, 0,
         2, 2, 0, 0, 2, 2, 2, 0, 1, 3, 1, 0, 3, 3, 3, 0,
-    ]
-    instruction_cycles = [
+    ])
+    instruction_cycles = np.asarray([
         7, 6, 2, 8, 3, 3, 5, 5, 3, 2, 2, 2, 4, 4, 6, 6,
         2, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7,
         6, 6, 2, 8, 3, 3, 5, 5, 4, 2, 2, 2, 4, 4, 6, 6,
@@ -96,8 +96,8 @@ class CPU(object):
         2, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7,
         2, 6, 2, 8, 3, 3, 5, 5, 2, 2, 2, 2, 4, 4, 6, 6,
         2, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7,
-    ]
-    instruction_page_cycles = [
+    ])
+    instruction_page_cycles = np.asarray([
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -114,8 +114,8 @@ class CPU(object):
         1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0,
-    ]
-    instruction_names = [
+    ])
+    instruction_names = np.asarray([
         'BRK', 'ORA', 'KIL', 'SLO', 'NOP', 'ORA', 'ASL', 'SLO',
         'PHP', 'ORA', 'ASL', 'ANC', 'NOP', 'ORA', 'ASL', 'SLO',
         'BPL', 'ORA', 'KIL', 'SLO', 'NOP', 'ORA', 'ASL', 'SLO',
@@ -148,13 +148,13 @@ class CPU(object):
         'INX', 'SBC', 'NOP', 'SBC', 'CPX', 'SBC', 'INC', 'ISC',
         'BEQ', 'SBC', 'KIL', 'ISC', 'NOP', 'SBC', 'INC', 'ISC',
         'SED', 'SBC', 'NOP', 'ISC', 'NOP', 'SBC', 'INC', 'ISC',
-    ]
+    ])
 
     frequency = 1789773
 
     cycles = 0  # type: np.uint64
     pc = None  # program counter, stores the next instruction
-    sp = None  # stack pointer
+    sp = 0xFD  # stack pointer (documented initial state)
     a = 0  # accumulator
     x = 0  # X register
     y = 0  # Y register
@@ -260,10 +260,10 @@ class CPU(object):
         # Execute the operation
         opcode = getattr(self, opcode_name, None)
         if opcode:
-            print('Executing opcode: ' + opcode_name)
-            print('address: ' + str(address))
-            print('pc: ' + str(self.pc))
             opcode(info)
+            print('Executing opcode: ' + opcode_name)
+            print('address: ' + str(hex(address)))
+            print('pc: ' + str(hex(self.pc)))
 
         print(f'cycles: {self.cycles}')
         return int(self.cycles - cycles)
@@ -774,7 +774,7 @@ class CPU(object):
             self.a = (self.a << 1) & c
             self.set_zn(self.a)
         else:
-            value = self.memory.read()
+            value = self.memory.read(info.address)
             self.c = (value >> 7) & 1
             value = (value << 1) & c
             self.memory.write(info.address, value)

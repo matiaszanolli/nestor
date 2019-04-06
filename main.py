@@ -43,6 +43,7 @@ class Manager(threading.Thread):
         from modules.memory import Memory, PPUMemory
         from modules.ppu import PPU
         from modules.ui import UI
+        from modules.controller import IO
 
         super().__init__()
 
@@ -52,6 +53,7 @@ class Manager(threading.Thread):
         self.counter = 0  # type: int
         self.apu = APU()
         self.ui = UI(on_draw=self.on_draw)
+        self.io = IO()
         self.ppu_memory = PPUMemory(self)
         parser = argparse.ArgumentParser(
             description="Command line options for NEStor")

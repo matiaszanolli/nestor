@@ -1,10 +1,9 @@
 import numpy as np
-from typing import List
 
 
 class Memory(object):
     def __init__(self):
-        self._memory = np.zeros(0xffff, dtype=np.uint16)   # type: List[np.uint16]
+        self._memory = np.zeros(0xffff, dtype=np.uint16)   # type: np.ndarray
 
     def read(self, address: np.uint16) -> np.uint8:
         """
@@ -24,16 +23,17 @@ class Memory(object):
             return manager.ppu.read_register(0x2000 + address % 8)
         elif address < 0x4014:
             # APU registers
-            raise NotImplementedError()  # TODO: Implement APU operations
+            return np.uint8(0)
         elif address == 0x4014:
             # PPU register
             return manager.ppu.read_register(address)
-        elif address in (0x4015, 0x4017):
+        elif address == 0x4015:
             # More APU registers
             return np.uint8(0)
-        elif address == 0x4016 or address < 0x6000:
-            # I/O registers
-            raise NotImplementedError()  # TODO: Implement I/O operations
+        elif address == 0x4016:
+            return manager.io.read_state(0)
+        elif address == 0x4017:
+            return manager.io.read_state(1)
         else:
             # Cartridge mapper registers
             return manager.mapper.read(address)
@@ -64,9 +64,8 @@ class Memory(object):
         elif address in (0x4015, 0x4017):
             # More APU registers
             raise NotImplementedError()  # TODO: Implement APU operations
-        elif address == 0x4016 or address < 0x6000:
-            # I/O registers
-            raise NotImplementedError()  # TODO: Implement I/O operations
+        elif address == 0x4016:
+            manager.io.write_strobe(value)
         else:
             manager.mapper.write(address, value)
 

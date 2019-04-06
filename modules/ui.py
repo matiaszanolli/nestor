@@ -14,6 +14,10 @@ class UI(object):
         self.window.set_visible(True)
         self.sprites_to_draw = []
 
+        @self.window.event
+        def on_key_press(symbol, modifiers):
+            print(f'KEY PRESS: {symbol} -- {modifiers}')
+
     def clear(self):
         self.window.clear()
 

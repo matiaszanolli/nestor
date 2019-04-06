@@ -1,7 +1,7 @@
 import logging
 import numpy as np
 
-from .mappers import get_mapper
+from .mappers import get_mapper, BaseMapper
 
 log = logging.getLogger("logging")
 
@@ -10,7 +10,7 @@ class Cartridge(object):
 
     prg = None  # type: np.ndarray
     chr = None  # type: np.ndarray
-    mapper = None  # type: np.ndarray
+    mapper = None  # type: BaseMapper
     sram = np.ndarray(0x2000, dtype=np.uint8)
 
     def __init__(self, filename=None):

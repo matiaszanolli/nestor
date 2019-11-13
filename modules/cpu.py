@@ -154,18 +154,18 @@ class CPU(object):
 
     cycles = 0  # type: np.uint64
     pc = None  # program counter, stores the next instruction
-    sp = 0xFD  # stack pointer (documented initial state)
-    a = 0  # accumulator
-    x = 0  # X register
-    y = 0  # Y register
-    c = 0  # carry flag
-    z = 0  # zero flag
-    i = 0  # interrupt disable flag
-    d = 0  # decimal mode flag
-    b = 0  # break command flag
-    u = 0  # unused flag
-    v = 0  # overflow flag
-    n = 0  # negative flag
+    sp: np.uint16 = np.uint16(0xFD)  # stack pointer (documented initial state)
+    a: np.uint8 = np.uint8(0)  # accumulator
+    x: np.uint8 = np.uint8(0)  # X register
+    y: np.uint8 = np.uint8(0)  # Y register
+    c: np.uint8 = np.uint8(0)  # carry flag
+    z: np.uint8 = np.uint8(0)  # zero flag
+    i: np.uint8 = np.uint8(0)  # interrupt disable flag
+    d: np.uint8 = np.uint8(0)  # decimal mode flag
+    b: np.uint8 = np.uint8(0)  # break command flag
+    u: np.uint8 = np.uint8(0)  # unused flag
+    v: np.uint8 = np.uint8(0)  # overflow flag
+    n: np.uint8 = np.uint8(0)  # negative flag
     interrupt = Interrupt.NONE  # interrupt type to perform
     stall = 0  # number of cycles to stall
     table = []
@@ -176,7 +176,7 @@ class CPU(object):
 
     def reset(self) -> None:
         self.pc = self.memory.read(np.uint8(0xFFFC))
-        self.sp = 0xFD
+        self.sp = np.uint16(0xFD)
         self.set_flags(0x24)
 
     def run_instruction(self, inst, **kwargs):
@@ -203,6 +203,8 @@ class CPU(object):
 
         # Get the opcode from the program counter, and its instruction mode
         opcode = self.memory.read(self.pc)
+        if opcode >= len(self.instruction_modes):
+            pass
         mode = self.instruction_modes[opcode]
 
         # According to the given instruction's mode, we define which address to
@@ -274,14 +276,14 @@ class CPU(object):
         [in 8-bit signed integers, any value > 128 is treated as negative]
         :param value: an 8-bit value
         """
-        self.n = 1 if value & 0x80 != 0 else 0
+        self.n = np.uint8(1 if value & 0x80 != 0 else 0)
 
     def set_z(self, value):
         """
         Sets the zero flag if the provided value is zero.
         :param value: byte
         """
-        self.z = 1 if value == 0 else 0
+        self.z = np.uint8(1 if value == 0 else 0)
 
     def set_zn(self, value):
         """
@@ -377,7 +379,7 @@ class CPU(object):
         :param b: byte
         """
         self.set_zn(a - b)
-        self.c = 1 if a >= b else 0
+        self.c = np.uint8(1 if a >= b else 0)
 
     def nmi(self):
         """
@@ -386,7 +388,7 @@ class CPU(object):
         self.stack_push(self.pc)
         self.php(None)
         self.pc = self.memory.read16(np.uint16(0xFFFA))
-        self.i = 1
+        self.i = np.uint8(1)
         # The NES has an interrupt latency of 7 cycles, which means it takes 7
         # CPU cycles to begin executing the interrupt handler
         self.cycles += 7
@@ -398,7 +400,7 @@ class CPU(object):
         self.stack_push(self.pc)
         self.php(None)
         self.pc = self.memory.read16(np.uint16(0xFFFE))
-        self.i = 1
+        self.i = np.uint8(1)
         self.cycles += 7
 
     def adc(self, info: StepInfo) -> None:
@@ -415,10 +417,7 @@ class CPU(object):
         self.set_zn(self.a)
 
         # Step 1: check for carry
-        if int(a) + int(b) + int(c) > 0xFF:
-            self.c = 1
-        else:
-            self.c = 0
+        self.c = np.uint8(1 if int(a) + int(b) + int(c) > 0xFF else 0)
 
         # Step 2: check for overflow
         if (a ^ b) & 0x80 == 0 and (a ^ self.a) & 0x80 != 0:
@@ -550,28 +549,28 @@ class CPU(object):
         CLC (CLear the Carry flag).
         :param info: a StepInfo object.
         """
-        self.c = 0
+        self.c = np.uint8(0)
 
     def cld(self, info: StepInfo) -> None:
         """
         CLD (CLear the Decimal mode).
         :param info: a StepInfo object.
         """
-        self.d = 0
+        self.d = np.uint8(0)
 
     def cli(self, info: StepInfo) -> None:
         """
         CLD (CLear the Interrupt disable).
         :param info: a StepInfo object.
         """
-        self.i = 0
+        self.i = np.uint8(0)
 
     def clv(self, info: StepInfo) -> None:
         """
         CLV (CLear the oVerflow flag).
         :param info: a StepInfo object.
         """
-        self.v = 0
+        self.v = np.uint8(0)
 
     def cmp(self, info: StepInfo) -> None:
         """
@@ -792,7 +791,7 @@ class CPU(object):
             self.a = (self.a >> 1) | (c << 7)
             self.set_zn(self.a)
         else:
-            value = self.memory.read()
+            value = self.memory.read(info.address)
             self.c = value & 1
             value = (value >> 1) | (c << 7)
             self.memory.write(info.address, value)
@@ -825,29 +824,29 @@ class CPU(object):
         c = self.c
         self.a = a - b - (1 - c)
         self.set_zn(self.a)
-        self.c = 1 if int(a) - int(b) - int(1 - c) >= 0 else 0
-        self.v = 1 if (a ^ b) & 0x80 != 0 and (a ^ self.a) & 0x80 != 0 else 0
+        self.c = np.uint8(1 if int(a) - int(b) - int(1 - c) >= 0 else 0)
+        self.v = np.uint8(1 if (a ^ b) & 0x80 != 0 and (a ^ self.a) & 0x80 != 0 else 0)
 
     def sec(self, info: StepInfo) -> None:
         """
         SEC (SEt Carry flag)
         :param info: a StepInfo object 
         """
-        self.c = 1
+        self.c = np.uint8(1)
 
     def sed(self, info: StepInfo) -> None:
         """
         SED (SEt Decimal flag)
         :param info: a StepInfo object 
         """
-        self.d = 1
+        self.d = np.uint8(1)
 
     def sei(self, info: StepInfo) -> None:
         """
         SEI (SEt Interrupt disable)
         :param info: a StepInfo object 
         """
-        self.i = 1
+        self.i = np.uint8(1)
 
     def sta(self, info: StepInfo) -> None:
         """

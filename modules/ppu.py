@@ -56,7 +56,7 @@ class PPU(object):
     flag_sprite_zero_hit = np.uint8(0)  # type: np.uint8
 
     tile_data = None  # type: np.uint64
-    sprite_count = None  # type: np.ndarray
+    sprite_count = None  # type: int
     sprite_positions = None
     front = None
     background_color = None  # type: List[int]
@@ -140,7 +140,7 @@ class PPU(object):
         # self.palette_data = np.ndarray((32, ), dtype=np.uint8)
         self.nametable_data = np.ndarray((2048, ), dtype=np.uint8)
         self.oam_data = np.ndarray((2048, ), dtype=np.uint8)
-        self.sprite_count = np.ndarray((8, ), dtype=np.uint8)
+        self.sprite_count = 0
         self.sprite_priorities = np.ndarray((8, ), dtype=np.uint8)
         self.sprite_indexes = np.ndarray((8, ), dtype=np.uint8)
         self.sprite_patterns = np.ndarray((8, ), dtype=np.uint32)
@@ -252,7 +252,7 @@ class PPU(object):
             result |= 1 << 7
         self.nmi_occurred = False
         self.nmi_change()
-        self.w = 0
+        self.w = np.uint8(0)
         return np.uint8(result)
 
     def write_oam_address(self, value: np.uint8) -> None:
@@ -292,11 +292,11 @@ class PPU(object):
         if self.w == 0:
             self.t = (self.t & 0xFFE0) | (np.uint16(value) >> 3)
             self.x = value & 0x07
-            self.w = 1
+            self.w = np.uint8(1)
         else:
             self.t = (self.t & 0x8FFF) | ((np.uint16(value) & 0x07) << 12)
             self.t = (self.t & 0xFC1F) | ((np.uint16(value) & 0xF8) << 2)
-            self.w = 0
+            self.w = np.uint8(0)
 
     def write_address(self, value: np.uint8) -> None:
         """
@@ -308,11 +308,11 @@ class PPU(object):
         """
         if self.w == 0:
             self.t = (self.t & 0x80FF) | ((np.uint16(value) & 0x3F) << 8)
-            self.w = 1
+            self.w = np.uint8(1)
         else:
             self.t = (self.t & 0xFF00) | np.uint16(value)
             self.v = self.t
-            self.w = 1
+            self.w = np.uint8(1)
 
     def read_data(self) -> np.uint8:
         """
@@ -457,7 +457,7 @@ class PPU(object):
             color = background
         else:
             if self.sprite_indexes[i] == 0 and x < 255:
-                self.flag_sprite_zero_hit = 1
+                self.flag_sprite_zero_hit = np.uint8(1)
             if self.sprite_priorities[i] == 0:
                 color = sprite | 0x10
             else:
@@ -630,8 +630,8 @@ class PPU(object):
 
         if pre_line and self.cycle == 1:
             self.clear_vblank()
-            self.flag_sprite_zero_hit = 0
-            self.flag_sprite_overflow = 0
+            self.flag_sprite_zero_hit = np.uint8(0)
+            self.flag_sprite_overflow = np.uint8(0)
 
     def clear_vblank(self) -> None:
         """

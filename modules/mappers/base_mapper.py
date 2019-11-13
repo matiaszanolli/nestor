@@ -18,6 +18,14 @@ class BaseMapper(object):
     def sram(self):
         return self._cartridge.sram
 
+    @property
+    def mirror(self):
+        return self._cartridge.mirror
+
+    @mirror.setter
+    def mirror(self, value):
+        self._cartridge.mirror = value
+
     def read(self, address: np.uint16) -> np.uint8:
         raise NotImplementedError
 

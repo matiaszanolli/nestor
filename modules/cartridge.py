@@ -11,10 +11,12 @@ class Cartridge(object):
     prg = None  # type: np.ndarray
     chr = None  # type: np.ndarray
     mapper = None  # type: BaseMapper
-    sram = np.ndarray(0x2000, dtype=np.uint8)
+    mirror = None  # type: np.uint8
+    sram = np.ndarray((0x2000,), dtype=np.uint8)
 
     def __init__(self, filename=None):
-        self.prg = np.ndarray((0x2000, ))
+        self.prg = np.zeros((0x2000, ))
+        self.mirror = np.uint8(0)
         if filename is not None:
             self.load(filename)
 

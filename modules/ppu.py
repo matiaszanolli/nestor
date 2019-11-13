@@ -377,7 +377,7 @@ class PPU(object):
         v = self.v
         address = 0x23C0 | (v & 0x0C00) | ((v >> 4) & 0x38) | ((v >> 2) & 0x07)
         shift = ((v >> 4) & 4) | (v & 2)
-        memory = Manager.memory
+        memory = Manager().memory
         self.attribute_table_byte = ((memory.read(address) >> shift) & 3) << 2
 
     def fetch_low_tile_byte(self):
@@ -385,7 +385,7 @@ class PPU(object):
         table = self.flag_background_table
         tile = self.name_table_byte
         address = 0x1000 * np.uint16(table) + np.uint16(tile) * 16 + fine_y
-        memory = Manager.memory
+        memory = Manager().memory
         self.low_tile_byte = memory.read(address)
 
     def fetch_high_tile_byte(self):
@@ -393,7 +393,7 @@ class PPU(object):
         table = self.flag_background_table
         tile = self.name_table_byte
         address = 0x1000 * np.uint16(table) + np.uint16(tile) * 16 + fine_y
-        memory = Manager.memory
+        memory = Manager().memory
         self.high_tile_byte = memory.read(address + 8)
 
     def store_tile_data(self):
@@ -529,7 +529,7 @@ class PPU(object):
 
         if count > 8:
             count = 8
-            self.flag_sprite_overflow = 1
+            self.flag_sprite_overflow = np.uint8(1)
 
         self.sprite_count = count
 
@@ -645,7 +645,7 @@ class PPU(object):
         Sets the Vertical Blank stage of the frame
         """
         self.front, self.background_color = self.background_color, self.front
-        self.nmi_occurred = 1
+        self.nmi_occurred = True
         self.nmi_change()
 
     def copy_x(self) -> None:

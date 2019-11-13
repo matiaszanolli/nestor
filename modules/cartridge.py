@@ -27,10 +27,10 @@ class Cartridge(object):
             self._parse_header(header)
 
             # Read PRG ROM
-            self.prg = f.read(self._prg_rom_pages * 0x4000)
+            self.prg = np.frombuffer(f.read(self._prg_rom_pages * 0x4000), dtype=np.uint8)
 
             # Read CHR ROM
-            self.chr = f.read(self._chr_rom_pages * 0x2000)
+            self.chr = np.frombuffer(f.read(self._chr_rom_pages * 0x2000), dtype=np.uint8)
 
             self.mapper = self.load_mapper(self._mapper_id)
             log.debug("Uses mapper: {0}".format(self.mapper.__class__))

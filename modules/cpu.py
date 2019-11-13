@@ -185,6 +185,8 @@ class CPU(object):
         getattr(self, inst.lower())(**kwargs)
 
     def step(self):
+        if self.cycles > 93025:
+            print('debug!')
         if self.stall:
             self.stall -= 1
             return 1
@@ -203,8 +205,9 @@ class CPU(object):
 
         # Get the opcode from the program counter, and its instruction mode
         opcode = self.memory.read(self.pc)
-        if opcode >= len(self.instruction_modes):
-            pass
+        print(f'opcode: {opcode}')
+        if int(opcode) >= self.instruction_modes.size:
+            print('coso')
         mode = self.instruction_modes[opcode]
 
         # According to the given instruction's mode, we define which address to
@@ -270,7 +273,7 @@ class CPU(object):
         print(f'cycles: {self.cycles}')
         return int(self.cycles - cycles)
 
-    def set_n(self, value):
+    def set_n(self, value: np.uint8):
         """
         Sets the negative flag if the argument is negative (high bit is set)
         [in 8-bit signed integers, any value > 128 is treated as negative]
@@ -278,14 +281,14 @@ class CPU(object):
         """
         self.n = np.uint8(1 if value & 0x80 != 0 else 0)
 
-    def set_z(self, value):
+    def set_z(self, value: np.uint8):
         """
         Sets the zero flag if the provided value is zero.
         :param value: byte
         """
         self.z = np.uint8(1 if value == 0 else 0)
 
-    def set_zn(self, value):
+    def set_zn(self, value: np.uint8):
         """
         Check the value and set the negative or zero flags if needed.
         :param value: byte
@@ -306,9 +309,9 @@ class CPU(object):
         self.sp -= 1
         self.memory.write(np.uint16(0x100 | np.uint16(self.sp)), value)
 
-    def stack_pull(self):
-        val = self.memory.read(0x100 + self.sp)
+    def stack_pull(self) -> np.uint8:
         self.sp += 1
+        val = self.memory.read(0x100 + self.sp)
         return val
 
     def stack_push16(self, value: np.uint16):
@@ -321,7 +324,7 @@ class CPU(object):
         self.stack_push(hi)
         self.stack_push(lo)
 
-    def stack_pull16(self):
+    def stack_pull16(self) -> np.uint16:
         """
         Pulls two bytes from the stack.
         """
@@ -421,9 +424,9 @@ class CPU(object):
 
         # Step 2: check for overflow
         if (a ^ b) & 0x80 == 0 and (a ^ self.a) & 0x80 != 0:
-            self.v = 1
+            self.v = np.uint8(1)
         else:
-            self.v = 0
+            self.v = np.uint8(0)
 
     def _and(self, info: StepInfo) -> None:
         """
@@ -464,7 +467,7 @@ class CPU(object):
         counter to a given address.
         :param info: a StepInfo object
         """
-        if self.c == 0:
+        if self.c != 0:
             self.set_pc(info)
 
     def beq(self, info: StepInfo) -> None:
@@ -713,7 +716,7 @@ class CPU(object):
         else:
             value = self.memory.read(info.address)
             self.c = value & 1
-            value = value >> 1
+            value >>= 1
             self.memory.write(info.address, value)
             self.set_zn(value)
 

@@ -5,7 +5,7 @@ import numpy as np
 log = logging.getLogger('logger')
 
 
-class UI(object):
+class UI:
 
     def __init__(self, on_draw):
         self.window = pyglet.window.Window(visible=False)
@@ -13,17 +13,17 @@ class UI(object):
         self.window.on_draw = on_draw
         self.window.set_visible(True)
         self.sprites_to_draw = []
+#        @self.window.event
 
-        @self.window.event
-        def on_key_press(symbol, modifiers):
-            print(f'KEY PRESS: {symbol} -- {modifiers}')
+#        def on_key_press(symbol, modifiers):
+#            print(f'KEY PRESS: {symbol} -- {modifiers}')
 
     def clear(self):
         self.window.clear()
 
     def generate_frame(self):
         from main import Manager
-        manager = Manager()
+        manager = Manager.Instance()
         ppu = manager.ppu
         memory = manager.memory
         log.debug("PPU: Generating new frame...")

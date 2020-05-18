@@ -1,7 +1,7 @@
 import numpy as np
 
 
-class Memory(object):
+class Memory:
     def __init__(self):
         self._memory = np.zeros(0xffff, dtype=np.uint16)   # type: np.ndarray
 
@@ -13,7 +13,7 @@ class Memory(object):
         """
         from main import Manager
 
-        manager = Manager()
+        manager = Manager.Instance()
 
         if address < 0x2000:
             # The lower 2KB are the system main RAM, so can be assigned directly
@@ -38,7 +38,7 @@ class Memory(object):
             # Cartridge mapper registers
             return manager.mapper.read(address)
 
-    def write(self, address: np.uint16, value: np.uint8, length=0x0800):
+    def write(self, address: np.uint16, value: np.uint8, length=0x0800) -> None:
         """
         Writes an 8-bit chunk of memory in a specified address.
         :param address: a location between 0x0000 and 0xFFFF
@@ -47,7 +47,7 @@ class Memory(object):
         """
         from main import Manager
 
-        manager = Manager()
+        manager = Manager.Instance()
 
         if address < 0x2000:
             # The lower 2KB are the system main RAM, so can be assigned directly
@@ -69,7 +69,7 @@ class Memory(object):
         else:
             manager.mapper.write(address, value)
 
-    def read16(self, address: np.uint16):
+    def read16(self, address: np.uint16) -> np.uint16:
         """
         Reads a 16-bit chunk of memory in a specified address.
         :param address: uint16
@@ -80,7 +80,7 @@ class Memory(object):
 
         return (high << 8) | low
 
-    def read16bug(self, address: np.uint16):
+    def read16bug(self, address: np.uint16) -> np.uint16:
         """
         Taken from fogleman's source, "emulates a 6502 bug that caused the low 
         byte to wrap without incrementing the high byte"

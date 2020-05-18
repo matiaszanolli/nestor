@@ -7,7 +7,7 @@ from .cpu import Interrupt
 from main import Manager
 
 
-class PPU(object):
+class PPU:
 
     # Memory interface
     memory = None
@@ -344,7 +344,7 @@ class PPU(object):
  
         :param value: byte
         """
-        manager = Manager()
+        manager = Manager.Instance()
 
         manager.ppu_memory.write(self.v, np.uint16(value))
         if self.flag_increment == 0:
@@ -359,8 +359,9 @@ class PPU(object):
         internal PPU OAM.
         :param value: byte
         """
-        memory = Manager().memory
-        cpu = Manager().cpu
+        manager = Manager.Instance()
+        memory = manager.memory
+        cpu = manager.cpu
         address = np.uint8(np.uint16(value) << 8)
         for i in range(256):
             self.oam_data[self.oam_address] = memory.read(address)
@@ -377,7 +378,7 @@ class PPU(object):
         v = self.v
         address = 0x23C0 | (v & 0x0C00) | ((v >> 4) & 0x38) | ((v >> 2) & 0x07)
         shift = ((v >> 4) & 4) | (v & 2)
-        memory = Manager().memory
+        memory = Manager.Instance().memory
         self.attribute_table_byte = ((memory.read(address) >> shift) & 3) << 2
 
     def fetch_low_tile_byte(self):
@@ -385,7 +386,7 @@ class PPU(object):
         table = self.flag_background_table
         tile = self.name_table_byte
         address = 0x1000 * np.uint16(table) + np.uint16(tile) * 16 + fine_y
-        memory = Manager().memory
+        memory = Manager.Instance().memory
         self.low_tile_byte = memory.read(address)
 
     def fetch_high_tile_byte(self):
@@ -393,7 +394,7 @@ class PPU(object):
         table = self.flag_background_table
         tile = self.name_table_byte
         address = 0x1000 * np.uint16(table) + np.uint16(tile) * 16 + fine_y
-        memory = Manager().memory
+        memory = Manager.Instance().memory
         self.high_tile_byte = memory.read(address + 8)
 
     def store_tile_data(self):
@@ -484,7 +485,7 @@ class PPU(object):
 
         address = 0x1000 * np.uint16(table) + np.uint16(tile) * 16 + np.uint16(row)  # type: np.uint16
         a = (attributes & 3) << 2
-        memory = Manager().memory
+        memory = Manager.Instance().memory
         low_tile_byte = memory.read(address)
         high_tile_byte = memory.read(address + 8)
         data = np.uint32(0)
@@ -568,7 +569,7 @@ class PPU(object):
             if self.scanline > 261:
                 # FIXME: Possible fuckup point, but those are the risks of coding wasted i guess
                 # The whole frame should be ready to be shown by now (I guess)
-                Manager().ui.generate_frame()
+                Manager.Instance().ui.generate_frame()
                 self.scanline = 0
                 self.frame += 1
                 self.f ^= 1

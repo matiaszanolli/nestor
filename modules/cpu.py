@@ -1,6 +1,6 @@
 import numpy as np
 import threading
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from .memory import Memory
@@ -152,8 +152,8 @@ class CPU(object):
 
     frequency = 1789773
 
-    cycles = 0  # type: np.uint64
-    pc = None  # program counter, stores the next instruction
+    cycles: np.uint64 = 0
+    pc = 0  # program counter, stores the next instruction
     sp: np.uint16 = np.uint16(0xFD)  # stack pointer (documented initial state)
     a: np.uint8 = np.uint8(0)  # accumulator
     x: np.uint8 = np.uint8(0)  # X register
@@ -169,7 +169,7 @@ class CPU(object):
     interrupt = Interrupt.NONE  # interrupt type to perform
     stall = 0  # number of cycles to stall
     table = []
-    memory = None  # type: 'Memory'
+    memory: 'Memory' = None
 
     def __init__(self, memory: 'Memory'):
         self.memory = memory
@@ -185,8 +185,6 @@ class CPU(object):
         getattr(self, inst.lower())(**kwargs)
 
     def step(self):
-        if self.cycles > 93025:
-            print('debug!')
         if self.stall:
             self.stall -= 1
             return 1
@@ -374,7 +372,7 @@ class CPU(object):
         if self.pages_differ(info.pc, info.address):
             self.cycles += 1
 
-    def compare(self, a, b):
+    def compare(self, a: np.uint8, b: np.uint8) -> None:
         """
         Compares two bytes, setting the carry flag if a is bigger or equal to b
         and setting the Z and N flags according to their difference.
@@ -384,7 +382,7 @@ class CPU(object):
         self.set_zn(a - b)
         self.c = np.uint8(1 if a >= b else 0)
 
-    def nmi(self):
+    def nmi(self) -> None:
         """
         Non maskable interrupt
         """
@@ -396,7 +394,7 @@ class CPU(object):
         # CPU cycles to begin executing the interrupt handler
         self.cycles += 7
 
-    def irq(self):
+    def irq(self) -> None:
         """
         IRQ interrupt
         """
@@ -412,9 +410,9 @@ class CPU(object):
         :param info: 
         :return: 
         """
-        a = self.a  # accumulator
-        b = self.memory.read(info.address)  # memory address input
-        c = self.c  # carry flag
+        a: np.uint8 = self.a  # accumulator
+        b: np.uint8 = self.memory.read(info.address)  # memory address input
+        c: np.uint8 = self.c  # carry flag
 
         self.a = a + b + c
         self.set_zn(self.a)
@@ -446,7 +444,7 @@ class CPU(object):
             self.a = self.a << 1
             self.set_zn(self.a)
         else:
-            value = self.memory.read(info.address)
+            value: np.uint8 = self.memory.read(info.address)
             self.c = (value << 7) & 1
             value = value << 1
             self.memory.write(info.address, value)
@@ -580,7 +578,7 @@ class CPU(object):
         CMP (CoMPare): Compares the accumulator with a given address.
         :param info: a StepInfo object.
         """
-        value = self.memory.read(info.address)
+        value: np.uint8 = self.memory.read(info.address)
         self.compare(self.a, value)
 
     def cpx(self, info: StepInfo) -> None:
@@ -588,7 +586,7 @@ class CPU(object):
         CPX (ComPare with X): Compares the X register with a given address.
         :param info: a StepInfo object.
         """
-        value = self.memory.read(info.address)
+        value: np.uint8 = self.memory.read(info.address)
         self.compare(self.x, value)
 
     def cpy(self, info: StepInfo) -> None:
@@ -596,7 +594,7 @@ class CPU(object):
         CPY (ComPare with Y): Compares the Y register with a given address.
         :param info: a StepInfo object.
         """
-        value = self.memory.read(info.address)
+        value: np.uint8 = self.memory.read(info.address)
         self.compare(self.y, value)
 
     def dec(self, info: StepInfo) -> None:
@@ -605,7 +603,7 @@ class CPU(object):
         memory address.
         :param info: a StepInfo object.
         """
-        value = self.memory.read(info.address) - 1
+        value: np.uint8 = self.memory.read(info.address) - 1
         self.memory.write(info.address, value)
         self.set_zn(value)
 
@@ -640,7 +638,7 @@ class CPU(object):
         memory address.
         :param info: a StepInfo object.
         """
-        value = self.memory.read(info.address) + 1
+        value: np.uint8 = self.memory.read(info.address) + 1
         self.memory.write(info.address, value)
         self.set_zn(value)
 
@@ -742,7 +740,7 @@ class CPU(object):
         """
         self.stack_push(self.a)
 
-    def php(self, info: StepInfo) -> None:
+    def php(self, info: Optional[StepInfo]) -> None:
         """
         PHP (PusH Processor status): Pushes all flags to the stack.
         :param info: a StepInfo object.
@@ -770,13 +768,13 @@ class CPU(object):
         shifted into bit 0 and the original bit 7 is shifted into the Carry.
         :param info: a StepInfo object 
         """
-        c = self.c
+        c: np.uint8 = self.c
         if info.mode == InstructionMode.MODE_ACCUMULATOR:
             self.c = (self.a >> 7) & 1
             self.a = (self.a << 1) & c
             self.set_zn(self.a)
         else:
-            value = self.memory.read(info.address)
+            value: np.uint8 = self.memory.read(info.address)
             self.c = (value >> 7) & 1
             value = (value << 1) & c
             self.memory.write(info.address, value)
@@ -788,13 +786,13 @@ class CPU(object):
         shifted into bit 7 and the original bit 0 is shifted into the Carry.
         :param info: a StepInfo object 
         """
-        c = self.c
+        c: np.uint8 = self.c
         if info.mode == InstructionMode.MODE_ACCUMULATOR:
             self.c = self.a & 1
             self.a = (self.a >> 1) | (c << 7)
             self.set_zn(self.a)
         else:
-            value = self.memory.read(info.address)
+            value: np.uint8 = self.memory.read(info.address)
             self.c = value & 1
             value = (value >> 1) | (c << 7)
             self.memory.write(info.address, value)
@@ -822,9 +820,9 @@ class CPU(object):
         SBC (SuBstract with Carry)
         :param info: a StepInfo object 
         """
-        a = self.a
-        b = self.memory.read(info.address)
-        c = self.c
+        a: np.uint8 = self.a
+        b: np.uint8 = self.memory.read(info.address)
+        c: np.uint8 = self.c
         self.a = a - b - (1 - c)
         self.set_zn(self.a)
         self.c = np.uint8(1 if int(a) - int(b) - int(1 - c) >= 0 else 0)

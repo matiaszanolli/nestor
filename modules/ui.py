@@ -7,7 +7,7 @@ log = logging.getLogger('logger')
 
 class UI:
 
-    def __init__(self, on_draw):
+    def __init__(self, on_draw) -> None:
         self.window = pyglet.window.Window(visible=False)
         self.window.set_size(512, 448)
         self.window.on_draw = on_draw
@@ -18,10 +18,10 @@ class UI:
 #        def on_key_press(symbol, modifiers):
 #            print(f'KEY PRESS: {symbol} -- {modifiers}')
 
-    def clear(self):
+    def clear(self) -> None:
         self.window.clear()
 
-    def generate_frame(self):
+    def generate_frame(self) -> None:
         from main import Manager
         manager = Manager.Instance()
         ppu = manager.ppu

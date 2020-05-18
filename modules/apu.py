@@ -1,6 +1,4 @@
-
-
 class APU(object):
 
-    def step(self):
+    def step(self) -> None:
         pass

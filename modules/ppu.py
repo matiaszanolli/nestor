@@ -11,62 +11,54 @@ class PPU:
 
     # Memory interface
     memory = None
-    cycle = 0  # type: int
-    scanline = 0  # type: int
-    frame = 0  # type: int
-    frame_number = 0  # type: int
-    palette = []  # type: List[tuple]
+    cycle: int = 0
+    scanline: int = 0
+    frame: int = 0
+    frame_number: int = 0
+    palette: List[tuple] = []
 
-    '''
-    Registers:
-    v = current vram address (15 bit)
-    t = temporary vram address (15 bit)
-    x = fine x scroll (3 bit)
-    w = write toggle (1 bit)
-    f = even/odd frame flag (1 bit)
-    '''
-    v = 0  # type: np.uint16
-    t = 0  # type: np.uint16
-    x = 0  # type: np.uint8
-    w = 0  # type: np.uint8
-    f = 0  # type: np.uint8
+    v: np.uint16 = 0  # current vram address (15 bit)
+    t: np.uint16 = 0  # temporary vram address (15 bit)
+    x: np.uint8 = 0  # fine x scroll (3 bit)
+    w: np.uint8 = 0  # write toggle (1 bit)
+    f: np.uint8 = 0  # even/odd frame flag (1 bit)
 
-    register = 0  # type: np.uint8
+    register: np.uint8 = 0
 
     # Flags
-    nmi_occurred = False  # type: bool
-    nmi_output = False  # type: bool
-    nmi_previous = False  # type: bool
-    nmi_delay = np.uint8(0)  # type: np.uint8
-    flag_name_table = np.uint8(0)  # type: np.uint8
-    flag_increment = np.uint8(0)  # type: np.uint8
-    flag_sprite_table = np.uint8(0)  # type: np.uint8
-    flag_background_table = np.uint8(0)  # type: np.uint8
-    flag_sprite_size = np.uint8(0)  # type: np.uint8
-    flag_master_slave = np.uint8(0)  # type: np.uint8
-    flag_grayscale = np.uint8(0)  # type: np.uint8
-    flag_show_left_background = np.uint8(0)  # type: np.uint8
-    flag_show_left_sprites = np.uint8(0)  # type: np.uint8
-    flag_show_background = np.uint8(0)  # type: np.uint8
-    flag_show_sprites = np.uint8(0)  # type: np.uint8
-    flag_red_tint = np.uint8(0)  # type: np.uint8
-    flag_green_tint = np.uint8(0)  # type: np.uint8
-    flag_blue_tint = np.uint8(0)  # type: np.uint8
-    flag_sprite_overflow = np.uint8(0)  # type: np.uint8
-    flag_sprite_zero_hit = np.uint8(0)  # type: np.uint8
+    nmi_occurred: bool = False
+    nmi_output: bool = False
+    nmi_previous: bool = False
+    nmi_delay: np.uint8 = np.uint8(0)
+    flag_name_table: np.uint8 = np.uint8(0)
+    flag_increment: np.uint8 = np.uint8(0)
+    flag_sprite_table: np.uint8 = np.uint8(0)
+    flag_background_table: np.uint8 = np.uint8(0)
+    flag_sprite_size: np.uint8 = np.uint8(0)
+    flag_master_slave: np.uint8 = np.uint8(0)
+    flag_grayscale: np.uint8 = np.uint8(0)
+    flag_show_left_background: np.uint8 = np.uint8(0)
+    flag_show_left_sprites: np.uint8 = np.uint8(0)
+    flag_show_background: np.uint8 = np.uint8(0)
+    flag_show_sprites: np.uint8 = np.uint8(0)
+    flag_red_tint: np.uint8 = np.uint8(0)
+    flag_green_tint: np.uint8 = np.uint8(0)
+    flag_blue_tint: np.uint8 = np.uint8(0)
+    flag_sprite_overflow: np.uint8 = np.uint8(0)
+    flag_sprite_zero_hit: np.uint8 = np.uint8(0)
 
-    tile_data = None  # type: np.uint64
-    sprite_count = None  # type: int
+    tile_data: np.uint64 = None
+    sprite_count: int = 0
     sprite_positions = None
     front = None
-    background_color = None  # type: List[int]
+    background_color: List[int] = []
     attribute_table_byte = None
-    name_table_byte = None  # type: np.uint8
-    low_tile_byte = None  # type: np.uint8
-    high_tile_byte = None  # type: np.uint8
+    name_table_byte: np.uint8 = None
+    low_tile_byte: np.uint8 = None
+    high_tile_byte: np.uint8 = None
 
-    oam_address = np.uint8(0)  # type: np.uint8
-    buffered_data = np.uint8(0)  # type: np.uint8
+    oam_address: np.uint8 = np.uint8(0)
+    buffered_data: np.uint8 = np.uint8(0)
 
     def __init__(self, memory: Memory):
         self.window_frame = Batch()  # type: Batch
@@ -171,7 +163,7 @@ class PPU:
             return self.read_data()
         return np.uint8(0)
 
-    def write_register(self, address: np.uint16, value: np.uint8):
+    def write_register(self, address: np.uint16, value: np.uint8) -> None:
         """
         According to a given register address and 8-bit value, performs a
         write operation.
@@ -371,17 +363,17 @@ class PPU:
         if cpu.cycles % 2 == 1:
             cpu.stall += 1
 
-    def fetch_tile_data(self):
+    def fetch_tile_data(self) -> np.uint32:
         return np.uint32(self.tile_data >> 32)
 
-    def fetch_attribute_table_byte(self):
+    def fetch_attribute_table_byte(self) -> None:
         v = self.v
         address = 0x23C0 | (v & 0x0C00) | ((v >> 4) & 0x38) | ((v >> 2) & 0x07)
         shift = ((v >> 4) & 4) | (v & 2)
         memory = Manager.Instance().memory
         self.attribute_table_byte = ((memory.read(address) >> shift) & 3) << 2
 
-    def fetch_low_tile_byte(self):
+    def fetch_low_tile_byte(self) -> None:
         fine_y = (self.v >> 12) & 7
         table = self.flag_background_table
         tile = self.name_table_byte
@@ -389,7 +381,7 @@ class PPU:
         memory = Manager.Instance().memory
         self.low_tile_byte = memory.read(address)
 
-    def fetch_high_tile_byte(self):
+    def fetch_high_tile_byte(self) -> None:
         fine_y = (self.v >> 12) & 7
         table = self.flag_background_table
         tile = self.name_table_byte
@@ -397,7 +389,7 @@ class PPU:
         memory = Manager.Instance().memory
         self.high_tile_byte = memory.read(address + 8)
 
-    def store_tile_data(self):
+    def store_tile_data(self) -> None:
         data = np.uint32(0)
         for i in range(8):
             a = self.attribute_table_byte

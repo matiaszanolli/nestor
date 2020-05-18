@@ -177,14 +177,14 @@ class CPU(object):
     def reset(self) -> None:
         self.pc = self.memory.read(np.uint8(0xFFFC))
         self.sp = np.uint16(0xFD)
-        self.set_flags(0x24)
+        self.set_flags(np.uint8(0x24))
 
-    def run_instruction(self, inst, **kwargs):
+    def run_instruction(self, inst: str, **kwargs) -> None:
         if inst not in self.instruction_names:
             raise Exception('Invalid instruction!')
         getattr(self, inst.lower())(**kwargs)
 
-    def step(self):
+    def step(self) -> int:
         if self.stall:
             self.stall -= 1
             return 1
@@ -271,7 +271,7 @@ class CPU(object):
         print(f'cycles: {self.cycles}')
         return int(self.cycles - cycles)
 
-    def set_n(self, value: np.uint8):
+    def set_n(self, value: np.uint8) -> None:
         """
         Sets the negative flag if the argument is negative (high bit is set)
         [in 8-bit signed integers, any value > 128 is treated as negative]
@@ -279,14 +279,14 @@ class CPU(object):
         """
         self.n = np.uint8(1 if value & 0x80 != 0 else 0)
 
-    def set_z(self, value: np.uint8):
+    def set_z(self, value: np.uint8) -> None:
         """
         Sets the zero flag if the provided value is zero.
         :param value: byte
         """
         self.z = np.uint8(1 if value == 0 else 0)
 
-    def set_zn(self, value: np.uint8):
+    def set_zn(self, value: np.uint8) -> None:
         """
         Check the value and set the negative or zero flags if needed.
         :param value: byte
@@ -312,7 +312,7 @@ class CPU(object):
         val = self.memory.read(0x100 + self.sp)
         return val
 
-    def stack_push16(self, value: np.uint16):
+    def stack_push16(self, value: np.uint16) -> None:
         """
         Pushes two bytes into the stack.
         :param value: 16-bit integer
@@ -330,8 +330,8 @@ class CPU(object):
         hi = self.stack_pull()
         return hi << 8 | lo
 
-    def flags(self):
-        flags = 0
+    def flags(self) -> np.uint8:
+        flags = np.uint8(0)
         flags = flags | self.c << 0
         flags = flags | self.z << 1
         flags = flags | self.i << 2
@@ -342,7 +342,7 @@ class CPU(object):
         flags = flags | self.n << 7
         return flags
 
-    def set_flags(self, flags):
+    def set_flags(self, flags: np.uint8) -> None:
         self.c = (flags >> 0) & 1
         self.z = (flags >> 1) & 1
         self.i = (flags >> 2) & 1
@@ -353,7 +353,7 @@ class CPU(object):
         self.n = (flags >> 7) & 1
 
     @staticmethod
-    def pages_differ(a, b):
+    def pages_differ(a, b) -> bool:
         """
         Returns true if the two addresses reference different pages.
         :param a: memory address 

@@ -4,7 +4,7 @@ import numpy as np
 # I/O Handling logic.
 class IO(object):
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.gamepad_bits = np.ndarray(2, dtype=np.uint8)
         self.strobe = False
 

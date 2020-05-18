@@ -7,10 +7,10 @@ class Mapper2(BaseMapper):
     """
     Mapper 0 games seem to be compatible with this one.
     """
-    prg_banks = 0  # type: int
-    prg_bank_1 = 0  # type: int
+    prg_banks: int = 0
+    prg_bank_1: int = 0
 
-    def __init__(self, cartridge):
+    def __init__(self, cartridge) -> None:
         super().__init__(cartridge)
         self.prg_banks = len(self.prg) // 0x4000
         self.prg_bank_1 = 0
@@ -34,7 +34,7 @@ class Mapper2(BaseMapper):
         else:
             raise Exception(f'unhandled mapper2 read at address: {hex(address)}')
 
-    def write(self, address: np.uint16, value: np.uint8):
+    def write(self, address: np.uint16, value: np.uint8) -> None:
         if address < 0x2000:
             self.chr[address] = value
         elif address >= 0x8000:

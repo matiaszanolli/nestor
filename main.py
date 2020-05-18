@@ -35,17 +35,17 @@ class Singleton:
             self._instance = self._cls()
             return self._instance
 
-    def __call__(self):
+    def __call__(self) -> None:
         raise TypeError('Singletons must be accessed through `Instance()`.')
 
-    def __instancecheck__(self, inst):
+    def __instancecheck__(self, inst) -> bool:
         return isinstance(inst, self._cls)
 
 
 @Singleton
 class Manager(threading.Thread):
 
-    def __init__(self):
+    def __init__(self) -> None:
 
         super().__init__()
 
@@ -73,7 +73,7 @@ class Manager(threading.Thread):
         self.cartridge = Cartridge(args.romfile)
         self._mapper = self.cartridge.mapper
 
-    def run(self):
+    def run(self) -> None:
         self.reset()
         while True:
             self.step()
@@ -83,23 +83,23 @@ class Manager(threading.Thread):
         return getattr(self, '_memory', None)
 
     @memory.setter
-    def memory(self, value):
+    def memory(self, value) -> None:
         self._memory = value
 
     @property
-    def mapper(self):
+    def mapper(self) -> 'BaseMapper':
         return getattr(self, '_mapper', None)
 
     @mapper.setter
-    def mapper(self, value):
+    def mapper(self, value) -> None:
         self._mapper = value
 
-    def on_draw(self):
+    def on_draw(self) -> None:
         self.ui.clear()
         window_frame = self.ppu.window_frame
         window_frame.draw()
 
-    def step(self):
+    def step(self) -> int:
         cpu_cycles = self.cpu.step()
         ppu_cycles = cpu_cycles * 3  # PPU runs at thrice the speed
         for _ in range(ppu_cycles):
@@ -109,7 +109,7 @@ class Manager(threading.Thread):
             self.apu.step()
         return cpu_cycles
 
-    def reset(self):
+    def reset(self) -> None:
         self.cpu.reset()
 
 

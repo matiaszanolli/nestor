@@ -5,7 +5,7 @@ from .base_mapper import BaseMapper
 
 class Mapper1(BaseMapper):
 
-    def __init__(self, cartridge):
+    def __init__(self, cartridge) -> None:
         super().__init__(cartridge)
         self.shift_register = np.uint8(0x10)
         self.control = np.uint8(0)
@@ -18,7 +18,7 @@ class Mapper1(BaseMapper):
         self.chr_offsets = np.zeros(shape=(2,), dtype=np.uint8)
         self.prg_offsets[1] = self.prg_bank_offset(-1)
 
-    def step(self):
+    def step(self) -> None:
         pass
 
     def read(self, address: np.uint16) -> np.uint8:
@@ -36,7 +36,7 @@ class Mapper1(BaseMapper):
         else:
             raise Exception(f'unhandled mapper1 read at address: {hex(address)}')
 
-    def write(self, address: np.uint16, value: np.uint8):
+    def write(self, address: np.uint16, value: np.uint8) -> None:
         if address < 0x2000:  # CHR write
             bank = address // 0x1000
             offset = address % 0x1000
@@ -48,7 +48,7 @@ class Mapper1(BaseMapper):
         else:
             raise Exception(f'unhandled mapper1 write at address: {hex(address)}')
 
-    def load_register(self, address: np.uint16, value: np.uint8):
+    def load_register(self, address: np.uint16, value: np.uint8) -> None:
         if value & 0x80 == 0x80:
             self.shift_register = np.uint8(0x10)
             self.write_control(self.control | 0x0C)
@@ -60,7 +60,7 @@ class Mapper1(BaseMapper):
                 self.write_register(address, np.uint8(self.shift_register))
                 self.shift_register = np.uint8(0x10)
 
-    def write_register(self, address: np.uint16, value: np.uint8):
+    def write_register(self, address: np.uint16, value: np.uint8) -> None:
         if address <= 0x9FFF:
             self.write_control(value)
         elif address <= 0xBFFF:
@@ -70,22 +70,22 @@ class Mapper1(BaseMapper):
         elif address <= 0xFFFF:
             self.write_prg_bank(value)
 
-    def write_chr_bank_0(self, value: np.uint8):
+    def write_chr_bank_0(self, value: np.uint8) -> None:
         # CHR bank 0 (internal, $A000-$BFFF)
         self.chr_bank0 = value
         self.update_offsets()
 
-    def write_chr_bank_1(self, value: np.uint8):
+    def write_chr_bank_1(self, value: np.uint8) -> None:
         # CHR bank 1 (internal, $C000-$DFFF)
         self.chr_bank1 = value
         self.update_offsets()
 
-    def write_prg_bank(self, value: np.uint8):
+    def write_prg_bank(self, value: np.uint8) -> None:
         # PRG bank (internal, $E000-$FFFF)
         self.prg_bank = value & 0x0F
         self.update_offsets()
 
-    def write_control(self, value: np.uint8):
+    def write_control(self, value: np.uint8) -> None:
         self.control = value
         self.chr_mode = (value >> 4) & 1
         self.prg_mode = (value >> 2) & 3
@@ -102,7 +102,7 @@ class Mapper1(BaseMapper):
 
         self.update_offsets()
 
-    def update_offsets(self):
+    def update_offsets(self) -> None:
         if self.prg_mode in (0, 1,):  # switch 32 KB at $8000, ignoring low bit of bank number
             self.prg_offsets[0] = self.prg_bank_offset(int(self.prg_bank & 0xFE))
             self.prg_offsets[1] = self.prg_bank_offset(int(self.prg_bank | 0x01))
@@ -124,7 +124,7 @@ class Mapper1(BaseMapper):
         if index >= 0x80:
             index -= 0x100
         index %= len(self.prg) // 0x4000
-        offset = index * 0x4000
+        offset: int = index * 0x4000
         if offset < 0:
             offset += len(self.prg)
         return offset
@@ -133,7 +133,7 @@ class Mapper1(BaseMapper):
         if index >= 0x80:
             index -= 0x100
         index %= len(self.chr) // 0x1000
-        offset = index * 0x1000
+        offset: int = index * 0x1000
         if offset < 0:
             offset += len(self.chr)
         return offset

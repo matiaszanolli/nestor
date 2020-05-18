@@ -16,34 +16,28 @@ import argparse
 import logging
 import threading
 
+
 import pyglet
 
 from modules.memory import Memory
 
 log = logging.getLogger('logger')
 
-
-class Singleton:
-
-    def __init__(self, cls):
-        self._cls = cls
-
-    def Instance(self):
-        try:
-            return self._instance
-        except AttributeError:
-            self._instance = self._cls()
-            return self._instance
-
-    def __call__(self) -> None:
-        raise TypeError('Singletons must be accessed through `Instance()`.')
-
-    def __instancecheck__(self, inst) -> bool:
-        return isinstance(inst, self._cls)
+lock = threading.Lock()
 
 
-@Singleton
-class Manager(threading.Thread):
+class Singleton(type):
+    _instances = {}
+
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            with lock:
+                if cls not in cls._instances:
+                    cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+        return cls._instances[cls]
+
+
+class Manager(threading.Thread, metaclass=Singleton):
 
     def __init__(self) -> None:
 
@@ -118,7 +112,7 @@ if __name__ == "__main__":
     logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
     logging.info('Starting...')
 
-    manager = Manager.Instance()
+    manager = Manager()
     manager.start()
 
     pyglet.app.run()

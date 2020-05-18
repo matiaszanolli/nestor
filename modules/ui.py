@@ -23,7 +23,7 @@ class UI:
 
     def generate_frame(self) -> None:
         from main import Manager
-        manager = Manager.Instance()
+        manager = Manager()
         ppu = manager.ppu
         memory = manager.memory
         log.debug("PPU: Generating new frame...")

@@ -13,7 +13,7 @@ class Memory:
         """
         from main import Manager
 
-        manager = Manager.Instance()
+        manager = Manager()
 
         if address < 0x2000:
             # The lower 2KB are the system main RAM, so can be assigned directly
@@ -47,7 +47,7 @@ class Memory:
         """
         from main import Manager
 
-        manager = Manager.Instance()
+        manager = Manager()
 
         if address < 0x2000:
             # The lower 2KB are the system main RAM, so can be assigned directly

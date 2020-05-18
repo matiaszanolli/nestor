@@ -336,7 +336,7 @@ class PPU:
  
         :param value: byte
         """
-        manager = Manager.Instance()
+        manager = Manager()
 
         manager.ppu_memory.write(self.v, np.uint16(value))
         if self.flag_increment == 0:
@@ -351,7 +351,7 @@ class PPU:
         internal PPU OAM.
         :param value: byte
         """
-        manager = Manager.Instance()
+        manager = Manager()
         memory = manager.memory
         cpu = manager.cpu
         address = np.uint8(np.uint16(value) << 8)
@@ -370,7 +370,7 @@ class PPU:
         v = self.v
         address = 0x23C0 | (v & 0x0C00) | ((v >> 4) & 0x38) | ((v >> 2) & 0x07)
         shift = ((v >> 4) & 4) | (v & 2)
-        memory = Manager.Instance().memory
+        memory = Manager().memory
         self.attribute_table_byte = ((memory.read(address) >> shift) & 3) << 2
 
     def fetch_low_tile_byte(self) -> None:
@@ -378,7 +378,7 @@ class PPU:
         table = self.flag_background_table
         tile = self.name_table_byte
         address = 0x1000 * np.uint16(table) + np.uint16(tile) * 16 + fine_y
-        memory = Manager.Instance().memory
+        memory = Manager().memory
         self.low_tile_byte = memory.read(address)
 
     def fetch_high_tile_byte(self) -> None:
@@ -386,7 +386,7 @@ class PPU:
         table = self.flag_background_table
         tile = self.name_table_byte
         address = 0x1000 * np.uint16(table) + np.uint16(tile) * 16 + fine_y
-        memory = Manager.Instance().memory
+        memory = Manager().memory
         self.high_tile_byte = memory.read(address + 8)
 
     def store_tile_data(self) -> None:
@@ -477,7 +477,7 @@ class PPU:
 
         address = 0x1000 * np.uint16(table) + np.uint16(tile) * 16 + np.uint16(row)  # type: np.uint16
         a = (attributes & 3) << 2
-        memory = Manager.Instance().memory
+        memory = Manager().memory
         low_tile_byte = memory.read(address)
         high_tile_byte = memory.read(address + 8)
         data = np.uint32(0)
@@ -561,7 +561,7 @@ class PPU:
             if self.scanline > 261:
                 # FIXME: Possible fuckup point, but those are the risks of coding wasted i guess
                 # The whole frame should be ready to be shown by now (I guess)
-                Manager.Instance().ui.generate_frame()
+                Manager().ui.generate_frame()
                 self.scanline = 0
                 self.frame += 1
                 self.f ^= 1
